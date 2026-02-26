@@ -58,33 +58,6 @@ final class SettingsViewModel: ObservableObject {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 
-    // MARK: - Totem Properties
-
-    /// Whether a totem has been configured
-    var hasTotemConfigured: Bool {
-        settingsService.hasTotemConfigured
-    }
-
-    /// Whether totem scanning is enabled
-    var isTotemEnabled: Bool {
-        settingsService.isTotemEnabled
-    }
-
-    /// Status text for totem section
-    var totemStatusText: String {
-        if hasTotemConfigured {
-            return "Active"
-        } else {
-            return "Not configured"
-        }
-    }
-
-    /// Clear the registered totem
-    func clearTotem() {
-        settingsService.clearTotem()
-        objectWillChange.send()
-    }
-
     // MARK: - Initialization
 
     init() {

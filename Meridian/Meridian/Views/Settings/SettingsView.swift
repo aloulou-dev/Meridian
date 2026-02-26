@@ -27,9 +27,6 @@ struct SettingsView: View {
                         // Blocked Apps Section
                         blockedAppsSection
 
-                        // Totem Section
-                        totemSection
-
                         // Morning Session Section
                         morningSessionSection
 
@@ -98,41 +95,6 @@ struct SettingsView: View {
                     }
 
                     Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.textMuted)
-                }
-                .padding()
-                .cardStyle()
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    // MARK: - Totem Section
-
-    private var totemSection: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            sectionHeader(title: "QR Code", icon: "qrcode.viewfinder", iconColor: .primaryButton)
-
-            NavigationLink(destination: TotemSetupView()) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("QR Code Unlock")
-                            .font(Theme.Typography.body)
-                            .foregroundColor(.textPrimary)
-
-                        Text(viewModel.hasTotemConfigured ? "Active - scan to unlock after journaling" : "Tap to set up")
-                            .font(Theme.Typography.caption)
-                            .foregroundColor(.textSecondary)
-                    }
-
-                    Spacer()
-
-                    if viewModel.hasTotemConfigured {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.success)
-                    }
 
                     Image(systemName: "chevron.right")
                         .foregroundColor(.textMuted)

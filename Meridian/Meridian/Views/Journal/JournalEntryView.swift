@@ -15,7 +15,6 @@ struct JournalEntryView: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var capturedImage: UIImage?
     @State private var showCamera = false
-    @State private var showTotemScan = false
 
     let onComplete: (() -> Void)?
 
@@ -159,17 +158,6 @@ struct JournalEntryView: View {
                 }
             }
         }
-        .onChange(of: viewModel.requiresTotemScan) { requiresScan in
-            if requiresScan {
-                showTotemScan = true
-            }
-        }
-        .fullScreenCover(isPresented: $showTotemScan) {
-            TotemScanView(onUnlocked: {
-                dismiss()
-                onComplete?()
-            })
-        }
         .sheet(isPresented: $showCamera) {
             CameraCaptureView { image, jpegData in
                 capturedImage = image
@@ -307,12 +295,8 @@ struct JournalEntryView: View {
         Task {
             let success = await viewModel.submitEntry()
             if success {
-                // If totem scan is required, the fullScreenCover will handle dismissal
-                // Otherwise, dismiss now
-                if !viewModel.requiresTotemScan {
-                    dismiss()
-                    onComplete?()
-                }
+                dismiss()
+                onComplete?()
             }
         }
     }

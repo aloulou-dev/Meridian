@@ -22,7 +22,6 @@ final class JournalEntryViewModel: ObservableObject {
     @Published var selectedEntryInputMode: MorningEntryMode = .digital
     @Published var isSubmitting = false
     @Published var errorMessage: String?
-    @Published var requiresTotemScan = false
     @Published var isProcessingOCR = false
     @Published var ocrError: String?
 
@@ -225,13 +224,7 @@ final class JournalEntryViewModel: ObservableObject {
         }
 
         if isLocked {
-            if settingsService.hasTotemConfigured && QRScannerService.isCameraAvailable {
-                requiresTotemScan = true
-                isSubmitting = false
-                return true
-            } else {
-                lockStateManager.unlockApps()
-            }
+            lockStateManager.unlockApps()
         }
 
         isSubmitting = false

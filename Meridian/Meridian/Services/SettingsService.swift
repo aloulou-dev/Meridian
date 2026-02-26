@@ -33,8 +33,6 @@ final class SettingsService: ObservableObject {
         static let morningEntryMode = "meridian.morningEntryMode"
         static let nightGraceMinutes = "meridian.nightGraceMinutes"
         static let nightGraceEndsAt = "meridian.nightGraceEndsAt"
-        static let totemIdentifier = "meridian.totemIdentifier"
-        static let isTotemEnabled = "meridian.isTotemEnabled"
         static let aiPromptsEnabled = "meridian.aiPromptsEnabled"
         static let aiModelName = "meridian.aiModelName"
     }
@@ -100,37 +98,6 @@ final class SettingsService: ObservableObject {
     var nightGraceEndsAt: Date? {
         get { defaults.object(forKey: Keys.nightGraceEndsAt) as? Date }
         set { defaults.set(newValue, forKey: Keys.nightGraceEndsAt) }
-    }
-
-    // MARK: - Totem Settings
-
-    /// The registered totem identifier (QR code content)
-    var totemIdentifier: String? {
-        get { defaults.string(forKey: Keys.totemIdentifier) }
-        set { defaults.set(newValue, forKey: Keys.totemIdentifier) }
-    }
-
-    /// Whether totem scanning is enabled for unlocking
-    var isTotemEnabled: Bool {
-        get { defaults.bool(forKey: Keys.isTotemEnabled) }
-        set { defaults.set(newValue, forKey: Keys.isTotemEnabled) }
-    }
-
-    /// Whether a totem has been configured and is active
-    var hasTotemConfigured: Bool {
-        isTotemEnabled && totemIdentifier != nil
-    }
-
-    /// Register a new totem with the given identifier
-    func registerTotem(_ identifier: String) {
-        totemIdentifier = identifier
-        isTotemEnabled = true
-    }
-
-    /// Clear the registered totem
-    func clearTotem() {
-        totemIdentifier = nil
-        isTotemEnabled = false
     }
 
     // MARK: - Morning Times
@@ -348,8 +315,6 @@ final class SettingsService: ObservableObject {
             Keys.morningEntryMode,
             Keys.nightGraceMinutes,
             Keys.nightGraceEndsAt,
-            Keys.totemIdentifier,
-            Keys.isTotemEnabled,
             Keys.aiPromptsEnabled,
             Keys.aiModelName
         ]

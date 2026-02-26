@@ -7,7 +7,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Totem lets you attach a photo of your physical journal reflection.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Meridian uses the camera to scan QR codes for unlocking apps after journaling, and for capturing photos of physical journal reflections.</string>
+	<string>Meridian uses the camera to capture photos of your handwritten journal reflections.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
