@@ -266,7 +266,7 @@ struct SearchResultRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     // Date and type
                     HStack {
-                        Text(entry.timestamp.shortMonthDay)
+                        Text(entry.timestamp?.shortMonthDay ?? "")
                             .font(Theme.Typography.caption)
                             .foregroundColor(.textSecondary)
 
@@ -279,7 +279,7 @@ struct SearchResultRow: View {
 
                         Spacer()
 
-                        Text(entry.timestamp.timeString)
+                        Text(entry.timestamp?.timeString ?? "")
                             .font(Theme.Typography.small)
                             .foregroundColor(.textMuted)
                     }

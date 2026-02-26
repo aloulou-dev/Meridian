@@ -5,6 +5,7 @@
 //  Completion screen for the onboarding flow.
 //
 
+import Darwin
 import SwiftUI
 
 /// Final onboarding screen - ready to start
@@ -129,8 +130,8 @@ struct ReadyView: View {
         let angle = Double(index) * (360.0 / 8.0) * .pi / 180.0
         let radius: CGFloat = 100
         return CGSize(
-            width: cos(angle) * radius,
-            height: sin(angle) * radius
+            width: CGFloat(Darwin.cos(angle)) * radius,
+            height: CGFloat(Darwin.sin(angle)) * radius
         )
     }
 }

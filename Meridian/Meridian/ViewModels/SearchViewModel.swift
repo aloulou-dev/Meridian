@@ -157,7 +157,7 @@ final class SearchViewModel: ObservableObject {
             if useDateRange && !searchQuery.isEmpty {
                 let query = searchQuery.lowercased()
                 results = fetchedResults.filter {
-                    $0.content.lowercased().contains(query)
+                    ($0.content ?? "").lowercased().contains(query)
                 }
             } else {
                 results = fetchedResults

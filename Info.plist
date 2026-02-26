@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSFamilyControlsUsageDescription</key>
+	<string>Meridian uses Screen Time access to block selected apps during your focus sessions so you can build better habits and stay consistent with journaling.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Totem lets you attach a photo of your physical journal reflection.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Meridian uses the camera to scan QR codes for unlocking apps after journaling, and for capturing photos of physical journal reflections.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+</dict>
+</plist>

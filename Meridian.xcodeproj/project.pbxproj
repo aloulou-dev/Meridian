@@ -6,11 +6,88 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9201170D2F4B8F5F00FC8A5A /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9201170C2F4B8F5F00FC8A5A /* ManagedSettings.framework */; };
+		9201170F2F4B8F5F00FC8A5A /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9201170E2F4B8F5F00FC8A5A /* ManagedSettingsUI.framework */; };
+		920117172F4B8F5F00FC8A5A /* MeridianSheildConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9201170A2F4B8F5F00FC8A5A /* MeridianSheildConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		920117222F4B901700FC8A5A /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9201170C2F4B8F5F00FC8A5A /* ManagedSettings.framework */; };
+		9201172A2F4B901700FC8A5A /* MeridianSheildAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 920117212F4B901700FC8A5A /* MeridianSheildAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		920117152F4B8F5F00FC8A5A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92EAF7752F3A6DEF0064D097 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 920117092F4B8F5F00FC8A5A;
+			remoteInfo = MeridianSheildConfig;
+		};
+		920117282F4B901700FC8A5A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 92EAF7752F3A6DEF0064D097 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 920117202F4B901700FC8A5A;
+			remoteInfo = MeridianSheildAction;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9201171C2F4B8F5F00FC8A5A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9201172A2F4B901700FC8A5A /* MeridianSheildAction.appex in Embed Foundation Extensions */,
+				920117172F4B8F5F00FC8A5A /* MeridianSheildConfig.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		9201170A2F4B8F5F00FC8A5A /* MeridianSheildConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeridianSheildConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9201170C2F4B8F5F00FC8A5A /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
+		9201170E2F4B8F5F00FC8A5A /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
+		920117212F4B901700FC8A5A /* MeridianSheildAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeridianSheildAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		92EAF77D2F3A6DEF0064D097 /* Meridian.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Meridian.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		920117182F4B8F5F00FC8A5A /* Exceptions for "MeridianSheildConfig" folder in "MeridianSheildConfig" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 920117092F4B8F5F00FC8A5A /* MeridianSheildConfig */;
+		};
+		9201172B2F4B901700FC8A5A /* Exceptions for "MeridianSheildAction" folder in "MeridianSheildAction" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 920117202F4B901700FC8A5A /* MeridianSheildAction */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		920117102F4B8F5F00FC8A5A /* MeridianSheildConfig */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				920117182F4B8F5F00FC8A5A /* Exceptions for "MeridianSheildConfig" folder in "MeridianSheildConfig" target */,
+			);
+			path = MeridianSheildConfig;
+			sourceTree = "<group>";
+		};
+		920117232F4B901700FC8A5A /* MeridianSheildAction */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9201172B2F4B901700FC8A5A /* Exceptions for "MeridianSheildAction" folder in "MeridianSheildAction" target */,
+			);
+			path = MeridianSheildAction;
+			sourceTree = "<group>";
+		};
 		92EAF77F2F3A6DEF0064D097 /* Meridian */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Meridian;
@@ -19,6 +96,23 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		920117072F4B8F5F00FC8A5A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9201170D2F4B8F5F00FC8A5A /* ManagedSettings.framework in Frameworks */,
+				9201170F2F4B8F5F00FC8A5A /* ManagedSettingsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9201171E2F4B901700FC8A5A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				920117222F4B901700FC8A5A /* ManagedSettings.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		92EAF77A2F3A6DEF0064D097 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,10 +123,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9201170B2F4B8F5F00FC8A5A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9201170C2F4B8F5F00FC8A5A /* ManagedSettings.framework */,
+				9201170E2F4B8F5F00FC8A5A /* ManagedSettingsUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		92EAF7742F3A6DEF0064D097 = {
 			isa = PBXGroup;
 			children = (
 				92EAF77F2F3A6DEF0064D097 /* Meridian */,
+				920117102F4B8F5F00FC8A5A /* MeridianSheildConfig */,
+				920117232F4B901700FC8A5A /* MeridianSheildAction */,
+				9201170B2F4B8F5F00FC8A5A /* Frameworks */,
 				92EAF77E2F3A6DEF0064D097 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +147,8 @@
 			isa = PBXGroup;
 			children = (
 				92EAF77D2F3A6DEF0064D097 /* Meridian.app */,
+				9201170A2F4B8F5F00FC8A5A /* MeridianSheildConfig.appex */,
+				920117212F4B901700FC8A5A /* MeridianSheildAction.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +156,50 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		920117092F4B8F5F00FC8A5A /* MeridianSheildConfig */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 920117192F4B8F5F00FC8A5A /* Build configuration list for PBXNativeTarget "MeridianSheildConfig" */;
+			buildPhases = (
+				920117062F4B8F5F00FC8A5A /* Sources */,
+				920117072F4B8F5F00FC8A5A /* Frameworks */,
+				920117082F4B8F5F00FC8A5A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				920117102F4B8F5F00FC8A5A /* MeridianSheildConfig */,
+			);
+			name = MeridianSheildConfig;
+			packageProductDependencies = (
+			);
+			productName = MeridianSheildConfig;
+			productReference = 9201170A2F4B8F5F00FC8A5A /* MeridianSheildConfig.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		920117202F4B901700FC8A5A /* MeridianSheildAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9201172C2F4B901700FC8A5A /* Build configuration list for PBXNativeTarget "MeridianSheildAction" */;
+			buildPhases = (
+				9201171D2F4B901700FC8A5A /* Sources */,
+				9201171E2F4B901700FC8A5A /* Frameworks */,
+				9201171F2F4B901700FC8A5A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				920117232F4B901700FC8A5A /* MeridianSheildAction */,
+			);
+			name = MeridianSheildAction;
+			packageProductDependencies = (
+			);
+			productName = MeridianSheildAction;
+			productReference = 920117212F4B901700FC8A5A /* MeridianSheildAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		92EAF77C2F3A6DEF0064D097 /* Meridian */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 92EAF78D2F3A6DF10064D097 /* Build configuration list for PBXNativeTarget "Meridian" */;
@@ -55,10 +207,13 @@
 				92EAF7792F3A6DEF0064D097 /* Sources */,
 				92EAF77A2F3A6DEF0064D097 /* Frameworks */,
 				92EAF77B2F3A6DEF0064D097 /* Resources */,
+				9201171C2F4B8F5F00FC8A5A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				920117162F4B8F5F00FC8A5A /* PBXTargetDependency */,
+				920117292F4B901700FC8A5A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				92EAF77F2F3A6DEF0064D097 /* Meridian */,
@@ -80,6 +235,12 @@
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					920117092F4B8F5F00FC8A5A = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					920117202F4B901700FC8A5A = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					92EAF77C2F3A6DEF0064D097 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -100,11 +261,27 @@
 			projectRoot = "";
 			targets = (
 				92EAF77C2F3A6DEF0064D097 /* Meridian */,
+				920117092F4B8F5F00FC8A5A /* MeridianSheildConfig */,
+				920117202F4B901700FC8A5A /* MeridianSheildAction */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		920117082F4B8F5F00FC8A5A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9201171F2F4B901700FC8A5A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		92EAF77B2F3A6DEF0064D097 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +292,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		920117062F4B8F5F00FC8A5A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9201171D2F4B901700FC8A5A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		92EAF7792F3A6DEF0064D097 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +315,140 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		920117162F4B8F5F00FC8A5A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 920117092F4B8F5F00FC8A5A /* MeridianSheildConfig */;
+			targetProxy = 920117152F4B8F5F00FC8A5A /* PBXContainerItemProxy */;
+		};
+		920117292F4B901700FC8A5A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 920117202F4B901700FC8A5A /* MeridianSheildAction */;
+			targetProxy = 920117282F4B901700FC8A5A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		9201171A2F4B8F5F00FC8A5A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MeridianSheildConfig/MeridianSheildConfig.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8R7CP7UY2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeridianSheildConfig/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeridianSheildConfig;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Aloulou.Meridian.MeridianSheildConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9201171B2F4B8F5F00FC8A5A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MeridianSheildConfig/MeridianSheildConfig.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8R7CP7UY2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeridianSheildConfig/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeridianSheildConfig;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Aloulou.Meridian.MeridianSheildConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9201172D2F4B901700FC8A5A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MeridianSheildAction/MeridianSheildAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8R7CP7UY2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeridianSheildAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeridianSheildAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Aloulou.Meridian.MeridianSheildAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9201172E2F4B901700FC8A5A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MeridianSheildAction/MeridianSheildAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8R7CP7UY2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MeridianSheildAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MeridianSheildAction;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Aloulou.Meridian.MeridianSheildAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		92EAF78B2F3A6DF10064D097 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -178,7 +502,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -236,7 +560,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -251,11 +575,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Meridian/Meridian.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8R7CP7UY2P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,11 +609,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Meridian/Meridian.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8R7CP7UY2P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -313,6 +641,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		920117192F4B8F5F00FC8A5A /* Build configuration list for PBXNativeTarget "MeridianSheildConfig" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9201171A2F4B8F5F00FC8A5A /* Debug */,
+				9201171B2F4B8F5F00FC8A5A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9201172C2F4B901700FC8A5A /* Build configuration list for PBXNativeTarget "MeridianSheildAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9201172D2F4B901700FC8A5A /* Debug */,
+				9201172E2F4B901700FC8A5A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		92EAF7782F3A6DEF0064D097 /* Build configuration list for PBXProject "Meridian" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

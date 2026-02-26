@@ -110,6 +110,9 @@ extension Color {
     /// Warning amber
     static let warning = Color(hex: "#F6AD55")
 
+    /// Sanctuary purple (hard lock / sleep mode)
+    static let sanctuary = Color(hex: "#9F7AEA")
+
     // MARK: - Gradients
 
     /// Night sky gradient

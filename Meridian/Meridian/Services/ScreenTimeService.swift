@@ -5,10 +5,11 @@
 //  Service for managing app blocking via iOS FamilyControls/ScreenTime API.
 //
 
-import Foundation
-import FamilyControls
-import ManagedSettings
+import Combine
 import DeviceActivity
+import FamilyControls
+import Foundation
+import ManagedSettings
 
 /// Service for managing app blocking using iOS ScreenTime API
 final class ScreenTimeService: ObservableObject {
@@ -23,6 +24,7 @@ final class ScreenTimeService: ObservableObject {
 
     /// The managed settings store for applying shields
     private let store = ManagedSettingsStore()
+    private let deviceActivityCenter = DeviceActivityCenter()
 
     /// Published authorization status
     @Published private(set) var authorizationStatus: AuthorizationStatus = .notDetermined
@@ -39,6 +41,7 @@ final class ScreenTimeService: ObservableObject {
     private init() {
         loadBlockedAppsSelection()
         updateAuthorizationStatus()
+        rescheduleNightMonitoring()
     }
 
     // MARK: - Authorization
@@ -50,6 +53,7 @@ final class ScreenTimeService: ObservableObject {
         do {
             try await authorizationCenter.requestAuthorization(for: .individual)
             updateAuthorizationStatus()
+            rescheduleNightMonitoring()
             return authorizationStatus == .approved
         } catch {
             print("FamilyControls authorization failed: \(error)")
@@ -158,6 +162,44 @@ final class ScreenTimeService: ObservableObject {
     func reset() {
         clearBlockedApps()
         SettingsService.shared.blockedAppsData = nil
+        deviceActivityCenter.stopMonitoring()
+    }
+
+    // MARK: - Device Activity Monitoring
+
+    /// Reschedule weekly night monitoring so shields can be applied even when app is closed.
+    func rescheduleNightMonitoring() {
+        deviceActivityCenter.stopMonitoring()
+
+        guard isAuthorized, hasBlockedApps else {
+            print("Skipping DeviceActivity schedule: authorization or blocked apps missing")
+            return
+        }
+
+        for weekday in DayOfWeek.allCases {
+            let lockTime = SettingsService.shared.getNightLockTime(for: weekday)
+            let timeComponents = Calendar.current.dateComponents([.hour, .minute], from: lockTime)
+
+            var start = DateComponents()
+            start.weekday = weekday.rawValue
+            start.hour = timeComponents.hour
+            start.minute = timeComponents.minute
+
+            var end = DateComponents()
+            end.weekday = weekday.rawValue
+            end.hour = 23
+            end.minute = 59
+
+            let name = DeviceActivityName("night-lock-\(weekday.rawValue)")
+            let schedule = DeviceActivitySchedule(intervalStart: start, intervalEnd: end, repeats: true)
+
+            do {
+                try deviceActivityCenter.startMonitoring(name, during: schedule)
+                print("Scheduled DeviceActivity monitor \(name.rawValue) at \(start.hour ?? 0):\(start.minute ?? 0)")
+            } catch {
+                print("Failed to schedule DeviceActivity monitor \(name.rawValue): \(error)")
+            }
+        }
     }
 }
 

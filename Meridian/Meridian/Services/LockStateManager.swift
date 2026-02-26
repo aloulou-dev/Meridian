@@ -33,7 +33,10 @@ final class LockStateManager: ObservableObject {
 
     private let settingsService = SettingsService.shared
     private let screenTimeService = ScreenTimeService.shared
+    private let schedulingService = SchedulingService.shared
     private var cancellables = Set<AnyCancellable>()
+    private var gracePeriodTask: Task<Void, Never>?
+    private var foregroundLockTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -46,7 +49,11 @@ final class LockStateManager: ObservableObject {
     /// Load the persisted lock state
     private func loadState() {
         currentState = settingsService.lockState
+        restoreGracePeriodIfNeeded()
         syncScreenTimeState()
+        if !currentState.isLocked {
+            startForegroundTimer()
+        }
     }
 
     /// Save the current state to UserDefaults
@@ -63,37 +70,55 @@ final class LockStateManager: ObservableObject {
         }
     }
 
+    private func restoreGracePeriodIfNeeded() {
+        guard currentState == .nightGracePeriod else { return }
+        guard let endsAt = settingsService.nightGraceEndsAt else {
+            currentState = .nightHardLocked
+            saveState()
+            return
+        }
+        if Date() >= endsAt {
+            enterNightHardLock()
+        } else {
+            scheduleGracePeriodHardLock(endsAt: endsAt)
+        }
+    }
+
     // MARK: - State Transitions
 
     /// Enter morning lock state
     func enterMorningLock() {
+        stopForegroundTimer()
+
         guard settingsService.isMorningEnabled else {
             print("Morning session is disabled, skipping lock")
             return
         }
 
-        guard screenTimeService.hasBlockedApps else {
-            print("No blocked apps configured, skipping lock")
-            return
+        // When no blocked apps (e.g. Screen Time skipped), still enter lock state so the
+        // journal UI is shown; we just won't apply any app shields.
+        if screenTimeService.hasBlockedApps {
+            screenTimeService.lockApps()
         }
 
         // Check for forfeited night entry if transitioning from night lock
-        if currentState == .nightLocked {
+        if currentState == .nightSoftLocked || currentState == .nightHardLocked {
             handleForfeitedEntry(for: .night)
         }
 
         currentState = .morningLocked
         saveState()
-        screenTimeService.lockApps()
 
         print("Entered morning lock state")
     }
 
-    /// Enter night lock state
-    func enterNightLock() {
-        guard screenTimeService.hasBlockedApps else {
-            print("No blocked apps configured, skipping lock")
-            return
+    /// Enter night soft-lock state (2h before bedtime)
+    func enterNightSoftLock() {
+        stopForegroundTimer()
+
+        // When no blocked apps, still enter lock state so the journal UI is shown
+        if screenTimeService.hasBlockedApps {
+            screenTimeService.lockApps()
         }
 
         // Check for forfeited morning entry if transitioning from morning lock
@@ -101,34 +126,151 @@ final class LockStateManager: ObservableObject {
             handleForfeitedEntry(for: .morning)
         }
 
-        currentState = .nightLocked
+        currentState = .nightSoftLocked
+        settingsService.nightGraceEndsAt = nil
         saveState()
-        screenTimeService.lockApps()
 
-        print("Entered night lock state")
+        print("Entered night soft-lock state")
+    }
+
+    /// Backward-compatible night lock entry point
+    func enterNightLock() {
+        enterNightSoftLock()
+    }
+
+    /// Enter hard lock (Sanctuary mode) after grace period expires
+    func enterNightHardLock() {
+        gracePeriodTask?.cancel()
+        gracePeriodTask = nil
+        settingsService.nightGraceEndsAt = nil
+        currentState = .nightHardLocked
+        saveState()
+        if screenTimeService.hasBlockedApps {
+            screenTimeService.lockApps()
+        }
+        print("Entered night hard-lock (Sanctuary mode)")
+    }
+
+    /// Start grace period after successful night reflection
+    func beginNightGracePeriod() {
+        let graceSeconds = TimeInterval(settingsService.nightGraceMinutes * 60)
+        let endsAt = Date().addingTimeInterval(graceSeconds)
+        settingsService.nightGraceEndsAt = endsAt
+        currentState = .nightGracePeriod
+        saveState()
+        screenTimeService.unlockApps()
+        scheduleGracePeriodHardLock(endsAt: endsAt)
+        schedulingService.scheduleGraceExpiryNotification(at: endsAt)
+        print("Night grace period started, ends at \(endsAt)")
+    }
+
+    private func scheduleGracePeriodHardLock(endsAt: Date) {
+        gracePeriodTask?.cancel()
+        gracePeriodTask = Task { [weak self] in
+            let remaining = endsAt.timeIntervalSinceNow
+            if remaining > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+            }
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard let self else { return }
+                if self.currentState == .nightGracePeriod {
+                    self.enterNightHardLock()
+                }
+            }
+        }
+    }
+
+    // MARK: - Foreground Timer
+
+    /// Start a foreground timer that triggers locks at scheduled times.
+    /// Critical for simulator testing where BGTasks don't work.
+    func startForegroundTimer() {
+        foregroundLockTask?.cancel()
+
+        guard !currentState.isLocked else { return }
+        guard let (sessionType, targetDate) = nextScheduledLockTime() else { return }
+
+        let remaining = targetDate.timeIntervalSinceNow
+        guard remaining > 0 else {
+            // Time already passed, trigger immediately
+            triggerScheduledLock(for: sessionType)
+            return
+        }
+
+        print("Foreground timer scheduled for \(sessionType.rawValue) in \(Int(remaining))s")
+
+        foregroundLockTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                self?.triggerScheduledLock(for: sessionType)
+            }
+        }
+    }
+
+    private func triggerScheduledLock(for sessionType: SessionType) {
+        guard !currentState.isLocked else { return }
+        switch sessionType {
+        case .morning: enterMorningLock()
+        case .night: enterNightSoftLock()
+        case .anytime: break
+        }
+        // Reschedule for next event
+        startForegroundTimer()
+    }
+
+    func stopForegroundTimer() {
+        foregroundLockTask?.cancel()
+        foregroundLockTask = nil
+    }
+
+    /// Open app to morning or night prompt when user taps the notification (bypasses time/enabled checks)
+    func openToPromptFromNotification(sessionType: SessionType) {
+        switch sessionType {
+        case .morning:
+            currentState = .morningLocked
+        case .night:
+            currentState = .nightSoftLocked
+        case .anytime:
+            return
+        }
+        settingsService.nightGraceEndsAt = nil
+        saveState()
+        if screenTimeService.hasBlockedApps {
+            screenTimeService.lockApps()
+        }
     }
 
     /// Unlock apps after successful journal entry
     func unlockApps() {
         let previousState = currentState
-
-        currentState = .unlocked
-        saveState()
-        screenTimeService.unlockApps()
+        if previousState == .nightSoftLocked || previousState == .nightHardLocked {
+            beginNightGracePeriod()
+        } else {
+            currentState = .unlocked
+            saveState()
+            screenTimeService.unlockApps()
+        }
 
         // Record successful completion
         if let sessionType = previousState.sessionType {
             settingsService.recordEntryCreated(for: sessionType)
         }
 
+        startForegroundTimer()
         print("Apps unlocked from \(previousState.displayName)")
     }
 
     /// Force unlock without recording entry (for testing/admin)
     func forceUnlock() {
+        gracePeriodTask?.cancel()
+        gracePeriodTask = nil
+        settingsService.nightGraceEndsAt = nil
         currentState = .unlocked
         saveState()
         screenTimeService.unlockApps()
+        startForegroundTimer()
         print("Force unlocked apps")
     }
 
@@ -159,21 +301,26 @@ final class LockStateManager: ObservableObject {
                 enterNightLock()
             }
 
-        case .nightLocked:
-            // Check if morning time has arrived (forfeit night, maybe enter morning)
-            if settingsService.isMorningEnabled {
-                if let morningTime = settingsService.getMorningTime(for: today),
-                   now.isAfter(timeOf: morningTime) {
-                    handleForfeitedEntry(for: .night)
-                    enterMorningLock()
-                }
-            } else {
+        case .nightSoftLocked, .nightHardLocked:
+            // If we're in the day window (after morning time, before night lock), show morning journal
+            let nightLockTime = settingsService.getNightLockTime(for: today)
+            if settingsService.isMorningEnabled,
+               let morningTime = settingsService.getMorningTime(for: today),
+               now.isAfter(timeOf: morningTime) && now.isBefore(timeOf: nightLockTime) {
+                handleForfeitedEntry(for: .night)
+                enterMorningLock()
+            } else if !settingsService.isMorningEnabled {
                 // Check if we're past morning (forfeit and unlock)
                 let defaultMorningTime = Date.today(hour: 8)
                 if now.isAfter(timeOf: defaultMorningTime) {
                     handleForfeitedEntry(for: .night)
                     forceUnlock()
                 }
+            }
+
+        case .nightGracePeriod:
+            if let endsAt = settingsService.nightGraceEndsAt, now >= endsAt {
+                enterNightHardLock()
             }
         }
     }
@@ -182,26 +329,23 @@ final class LockStateManager: ObservableObject {
     private func checkIfShouldBeLocked(now: Date, today: DayOfWeek) {
         let nightLockTime = settingsService.getNightLockTime(for: today)
 
-        // Check night lock first (takes precedence)
-        if now.isAfter(timeOf: nightLockTime) {
-            // We're past night lock time, should be night locked
-            // But only if we haven't already completed tonight's entry
-            if settingsService.lastNightEntryDate == nil ||
-               !Calendar.current.isDateInToday(settingsService.lastNightEntryDate!) {
-                enterNightLock()
+        // Check morning lock first when we're in the "day" window (after morning time, before night lock).
+        // This ensures we show morning journal during the day, not night.
+        if settingsService.isMorningEnabled,
+           let morningTime = settingsService.getMorningTime(for: today),
+           now.isAfter(timeOf: morningTime) && now.isBefore(timeOf: nightLockTime) {
+            if settingsService.lastMorningEntryDate == nil ||
+               !Calendar.current.isDateInToday(settingsService.lastMorningEntryDate!) {
+                enterMorningLock()
                 return
             }
         }
 
-        // Check morning lock
-        if settingsService.isMorningEnabled,
-           let morningTime = settingsService.getMorningTime(for: today),
-           now.isAfter(timeOf: morningTime) && now.isBefore(timeOf: nightLockTime) {
-            // We're past morning time but before night time
-            // Should be morning locked if we haven't completed today's entry
-            if settingsService.lastMorningEntryDate == nil ||
-               !Calendar.current.isDateInToday(settingsService.lastMorningEntryDate!) {
-                enterMorningLock()
+        // Check night lock when we're in the night window (past night lock time)
+        if now.isAfter(timeOf: nightLockTime) {
+            if settingsService.lastNightEntryDate == nil ||
+               !Calendar.current.isDateInToday(settingsService.lastNightEntryDate!) {
+                enterNightLock()
             }
         }
     }

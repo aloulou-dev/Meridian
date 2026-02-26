@@ -16,9 +16,9 @@ struct AppSelectionView: View {
     var body: some View {
         OnboardingPageTemplate(
             title: "Choose Apps to Block",
-            subtitle: "Select the apps you want to lock until you complete your journal entry",
+            subtitle: "Select the apps you want to lock until you complete your journal entry (optional)",
             buttonTitle: "Continue",
-            isButtonEnabled: viewModel.hasSelectedApps,
+            isButtonEnabled: true,  // Screen Time optional: can continue with or without apps
             showBackButton: true,
             onBack: { viewModel.goToPreviousStep() },
             onNext: { viewModel.goToNextStep() }

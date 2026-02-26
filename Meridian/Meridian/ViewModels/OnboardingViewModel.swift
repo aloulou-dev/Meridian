@@ -5,8 +5,9 @@
 //  ViewModel for managing onboarding flow state.
 //
 
-import SwiftUI
+import Combine
 import FamilyControls
+import SwiftUI
 
 /// ViewModel for the onboarding flow
 final class OnboardingViewModel: ObservableObject {
@@ -47,6 +48,7 @@ final class OnboardingViewModel: ObservableObject {
 
     // Permission state
     @Published var permissionGranted = false
+    @Published var permissionSkipped = false  // Skip Screen Time for testing
     @Published var permissionError: String?
 
     // App selection
@@ -96,9 +98,9 @@ final class OnboardingViewModel: ObservableObject {
         case .welcome:
             return true
         case .permission:
-            return permissionGranted
+            return permissionGranted || permissionSkipped
         case .appSelection:
-            return hasSelectedApps
+            return true  // Screen Time optional: allow continuing without selecting apps
         case .morningConfig:
             return true
         case .nightConfig:
@@ -156,6 +158,12 @@ final class OnboardingViewModel: ObservableObject {
     }
 
     // MARK: - Permission
+
+    /// Skip Screen Time permission (for testing UI without Family Controls access)
+    func skipPermission() {
+        permissionSkipped = true
+        permissionError = nil
+    }
 
     @MainActor
     func requestPermission() async {
@@ -235,6 +243,12 @@ final class OnboardingViewModel: ObservableObject {
 
         // Schedule background tasks
         schedulingService.scheduleAllTasks()
+        screenTimeService.rescheduleNightMonitoring()
+
+        // Request notification permission so "Time to journal" can be delivered
+        Task {
+            _ = await schedulingService.requestNotificationAuthorization()
+        }
 
         // Mark onboarding complete
         settingsService.isOnboardingComplete = true

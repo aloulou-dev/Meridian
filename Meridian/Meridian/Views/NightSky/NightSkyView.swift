@@ -28,6 +28,8 @@ struct NightSkyView: View {
             // Navigation overlay
             VStack {
                 topBar
+                CyclePhaseIndicator()
+                    .padding(.top, Theme.Spacing.xxs)
                 Spacer()
                 bottomBar
             }
@@ -45,8 +47,8 @@ struct NightSkyView: View {
             )
         }
         .sheet(isPresented: $viewModel.showEntryDetail) {
-            if let entry = viewModel.selectedEntry {
-                EntryDetailView(entry: entry)
+            if let dayStar = viewModel.selectedDayStar {
+                DayDetailView(dayStar: dayStar)
             }
         }
         .onAppear {
@@ -59,11 +61,11 @@ struct NightSkyView: View {
     private var starsView: some View {
         GeometryReader { geometry in
             ZStack {
-                ForEach(viewModel.entries) { entry in
+                ForEach(viewModel.starDays) { dayStar in
                     StarView(
-                        entry: entry,
+                        dayStar: dayStar,
                         size: geometry.size,
-                        onTap: { viewModel.viewEntryDetail(entry) }
+                        onTap: { viewModel.viewDayDetail(dayStar) }
                     )
                 }
             }
@@ -111,7 +113,7 @@ struct NightSkyView: View {
         HStack {
             // Entry count
             if !viewModel.isEmpty {
-                Text("\(viewModel.entryCount) stars")
+                Text("\(viewModel.entryCount) day\(viewModel.entryCount == 1 ? "" : "s")")
                     .font(Theme.Typography.caption)
                     .foregroundColor(.textMuted)
             }
@@ -138,7 +140,116 @@ struct NightSkyView: View {
     }
 }
 
-// MARK: - Entry Detail View
+// MARK: - Day Detail View (both morning + night sessions for one day)
+
+struct DayDetailView: View {
+    let dayStar: DayStar
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.nightSkyGradient
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                        if let morning = dayStar.morningEntry {
+                            SessionBlock(
+                                title: "Morning",
+                                subtitle: "Set your intentions for the day",
+                                entry: morning
+                            )
+                        }
+
+                        ForEach(Array(dayStar.anytimeEntries.enumerated()), id: \.offset) { index, entry in
+                            SessionBlock(
+                                title: dayStar.anytimeEntries.count > 1 ? "Reflection \(index + 1)" : "Reflection",
+                                subtitle: "Extra journal entry",
+                                entry: entry
+                            )
+                        }
+
+                        if let night = dayStar.nightEntry {
+                            SessionBlock(
+                                title: "Night",
+                                subtitle: "How did your day go?",
+                                entry: night
+                            )
+                        }
+
+                        if dayStar.entries.isEmpty {
+                            Text("No entries for this day")
+                                .font(Theme.Typography.body)
+                                .foregroundColor(.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        }
+                    }
+                    .padding(Theme.Spacing.md)
+                }
+            }
+            .navigationTitle(dayStar.date.fullDate)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.primaryButton)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Session Block (one morning, reflection, or night entry in the day detail)
+
+private struct SessionBlock: View {
+    let title: String
+    let subtitle: String
+    let entry: JournalEntry
+
+    private var accentColor: Color {
+        if entry.isMorning { return .morningStar }
+        if entry.isNight { return .nightStar }
+        return .primaryButton
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            HStack(spacing: Theme.Spacing.xs) {
+                Image(systemName: entry.sessionType.iconName)
+                    .foregroundColor(accentColor)
+                Text(title)
+                    .font(Theme.Typography.subheading)
+                    .foregroundColor(.textPrimary)
+            }
+
+            Text(entry.timestamp?.timeString ?? "")
+                .font(Theme.Typography.caption)
+                .foregroundColor(.textMuted)
+
+            Divider()
+                .background(Color.white.opacity(0.1))
+
+            Text(entry.content ?? "")
+                .font(Theme.Typography.body)
+                .foregroundColor(.textPrimary)
+                .lineSpacing(6)
+
+            Text("\(entry.wordCount) words")
+                .font(Theme.Typography.small)
+                .foregroundColor(.textMuted)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.cardBackground)
+        .cornerRadius(Theme.CornerRadius.medium)
+    }
+}
+
+// MARK: - Entry Detail View (single entry, used e.g. from Search)
 
 struct EntryDetailView: View {
     let entry: JournalEntry
@@ -166,13 +277,13 @@ struct EntryDetailView: View {
                             Spacer()
 
                             // Date
-                            Text(entry.timestamp.fullDate)
+                            Text(entry.timestamp?.fullDate ?? "")
                                 .font(Theme.Typography.caption)
                                 .foregroundColor(.textSecondary)
                         }
 
                         // Time
-                        Text(entry.timestamp.timeString)
+                        Text(entry.timestamp?.timeString ?? "")
                             .font(Theme.Typography.caption)
                             .foregroundColor(.textMuted)
 
@@ -180,7 +291,7 @@ struct EntryDetailView: View {
                             .background(Color.white.opacity(0.1))
 
                         // Content
-                        Text(entry.content)
+                        Text(entry.content ?? "")
                             .font(Theme.Typography.body)
                             .foregroundColor(.textPrimary)
                             .lineSpacing(6)
@@ -196,7 +307,7 @@ struct EntryDetailView: View {
                     .padding(Theme.Spacing.md)
                 }
             }
-            .navigationTitle(entry.timestamp.formattedWithSession(entry.sessionType))
+            .navigationTitle(entry.timestamp.map { $0.formattedWithSession(entry.sessionType) } ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

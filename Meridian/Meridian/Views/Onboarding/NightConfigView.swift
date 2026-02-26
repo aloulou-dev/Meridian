@@ -15,7 +15,7 @@ struct NightConfigView: View {
     var body: some View {
         OnboardingPageTemplate(
             title: "Evening Wind Down",
-            subtitle: "Set your bedtime for each day",
+            subtitle: "Set your night session time for each day",
             buttonTitle: "Continue",
             isButtonEnabled: true,
             showBackButton: true,
@@ -93,12 +93,12 @@ struct NightConfigView: View {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "info.circle")
                                 .foregroundColor(.primaryButton)
-                            Text("Apps lock 2 hours before bedtime")
+                            Text("Apps lock at this time")
                                 .font(Theme.Typography.small)
                                 .foregroundColor(.textSecondary)
                         }
 
-                        Text("This gives you time to reflect on your day before winding down")
+                        Text("Choose a consistent time that supports your evening reflection rhythm")
                             .font(Theme.Typography.small)
                             .foregroundColor(.textMuted)
                             .multilineTextAlignment(.center)

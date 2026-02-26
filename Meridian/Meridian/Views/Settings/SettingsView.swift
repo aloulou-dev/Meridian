@@ -27,11 +27,20 @@ struct SettingsView: View {
                         // Blocked Apps Section
                         blockedAppsSection
 
+                        // Totem Section
+                        totemSection
+
                         // Morning Session Section
                         morningSessionSection
 
                         // Night Session Section
                         nightSessionSection
+
+                        // Notifications (test)
+                        notificationsSection
+
+                        // Demo Controls
+                        demoControlsSection
 
                         // About Section
                         aboutSection
@@ -89,6 +98,41 @@ struct SettingsView: View {
                     }
 
                     Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.textMuted)
+                }
+                .padding()
+                .cardStyle()
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Totem Section
+
+    private var totemSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            sectionHeader(title: "QR Code", icon: "qrcode.viewfinder", iconColor: .primaryButton)
+
+            NavigationLink(destination: TotemSetupView()) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("QR Code Unlock")
+                            .font(Theme.Typography.body)
+                            .foregroundColor(.textPrimary)
+
+                        Text(viewModel.hasTotemConfigured ? "Active - scan to unlock after journaling" : "Tap to set up")
+                            .font(Theme.Typography.caption)
+                            .foregroundColor(.textSecondary)
+                    }
+
+                    Spacer()
+
+                    if viewModel.hasTotemConfigured {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.success)
+                    }
 
                     Image(systemName: "chevron.right")
                         .foregroundColor(.textMuted)
@@ -160,7 +204,7 @@ struct SettingsView: View {
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "info.circle")
                         .foregroundColor(.primaryButton)
-                    Text("Apps lock 2 hours before bedtime")
+                    Text("Apps lock at this time")
                         .font(Theme.Typography.small)
                         .foregroundColor(.textSecondary)
                     Spacer()
@@ -168,6 +212,27 @@ struct SettingsView: View {
                 .padding()
                 .background(Color.cardBackground)
                 .cornerRadius(Theme.CornerRadius.medium, corners: [.topLeft, .topRight])
+
+                Divider()
+                    .background(Color.white.opacity(0.1))
+
+                HStack {
+                    Text("Grace period")
+                        .font(Theme.Typography.body)
+                        .foregroundColor(.textPrimary)
+                    Spacer()
+                    Stepper(
+                        "\(viewModel.nightGraceMinutes) min",
+                        value: $viewModel.nightGraceMinutes,
+                        in: 1...60
+                    )
+                    .labelsHidden()
+                    Text("\(viewModel.nightGraceMinutes) min")
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(.textSecondary)
+                }
+                .padding()
+                .background(Color.cardBackground)
 
                 Divider()
                     .background(Color.white.opacity(0.1))
@@ -208,6 +273,150 @@ struct SettingsView: View {
                     .stroke(Color.white.opacity(0.05), lineWidth: 1)
             )
         }
+    }
+
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            sectionHeader(title: "Notifications", icon: "bell.fill")
+
+            VStack(alignment: .leading, spacing: 0) {
+                Button(action: { viewModel.sendTestNotification() }) {
+                    HStack {
+                        Text("Send test notification")
+                            .font(Theme.Typography.body)
+                            .foregroundColor(.textPrimary)
+                        Spacer()
+                        if viewModel.isSendingTestNotification {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .primaryButton))
+                                .scaleEffect(0.9)
+                        } else {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.primaryButton)
+                        }
+                    }
+                    .padding()
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isSendingTestNotification)
+
+                Text("Tap to send a notification now. If you see it, reminders at your morning/night times will work.")
+                    .font(Theme.Typography.small)
+                    .foregroundColor(.textSecondary)
+                    .padding(.horizontal)
+                    .padding(.bottom, Theme.Spacing.sm)
+            }
+            .cardStyle()
+        }
+    }
+
+    // MARK: - Demo Controls Section
+
+    private var demoControlsSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            sectionHeader(title: "Hackathon Demo Controls", icon: "wand.and.stars")
+            VStack(spacing: Theme.Spacing.xs) {
+                // Status info
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: viewModel.isScreenTimeAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(viewModel.isScreenTimeAuthorized ? .success : .error)
+                        Text("Screen Time: \(viewModel.isScreenTimeAuthorized ? "Authorized" : "Not Authorized")")
+                            .font(Theme.Typography.small)
+                            .foregroundColor(.textSecondary)
+                    }
+                    HStack {
+                        Image(systemName: viewModel.hasAppsSelected ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(viewModel.hasAppsSelected ? .success : .error)
+                        Text("Apps Selected: \(viewModel.blockedAppsCount)")
+                            .font(Theme.Typography.small)
+                            .foregroundColor(.textSecondary)
+                    }
+                    HStack {
+                        Image(systemName: viewModel.isMorningEnabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(viewModel.isMorningEnabled ? .success : .warning)
+                        Text("Morning Session: \(viewModel.isMorningEnabled ? "Enabled" : "Disabled")")
+                            .font(Theme.Typography.small)
+                            .foregroundColor(.textSecondary)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+
+                // App blocking test controls
+                HStack(spacing: Theme.Spacing.sm) {
+                    Button(action: viewModel.blockAppsNow) {
+                        HStack {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 14))
+                            Text("Block Apps")
+                                .font(Theme.Typography.body)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.primaryButton)
+                        .foregroundColor(.white)
+                        .cornerRadius(Theme.CornerRadius.medium)
+                    }
+
+                    Button(action: viewModel.unblockAppsNow) {
+                        HStack {
+                            Image(systemName: "lock.open.fill")
+                                .font(.system(size: 14))
+                            Text("Unblock Apps")
+                                .font(Theme.Typography.body)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.success)
+                        .foregroundColor(.white)
+                        .cornerRadius(Theme.CornerRadius.medium)
+                    }
+                }
+
+                if let message = viewModel.blockingStatusMessage {
+                    Text(message)
+                        .font(Theme.Typography.small)
+                        .foregroundColor(message.contains("successfully") ? .success : .warning)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Theme.Spacing.xs)
+                }
+
+                Text(viewModel.areAppsBlocked ? "Shield Status: ACTIVE" : "Shield Status: INACTIVE")
+                    .font(Theme.Typography.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(viewModel.areAppsBlocked ? .error : .success)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, Theme.Spacing.xs)
+
+                demoButton("Trigger morning lock now", action: viewModel.triggerMorningLockNow)
+                demoButton("Trigger night soft lock now", action: viewModel.triggerNightSoftLockNow)
+                demoButton("Start grace period now", action: viewModel.triggerGraceNow)
+                demoButton("Trigger hard lock now", action: viewModel.triggerHardLockNow)
+            }
+        }
+    }
+
+    private func demoButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title)
+                    .font(Theme.Typography.body)
+                    .foregroundColor(.textPrimary)
+                Spacer()
+                Image(systemName: "play.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.primaryButton)
+            }
+            .padding()
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - About Section

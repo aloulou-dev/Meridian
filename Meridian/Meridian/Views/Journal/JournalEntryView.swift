@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// Main journal entry screen
 struct JournalEntryView: View {
     @StateObject private var viewModel: JournalEntryViewModel
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isTextFieldFocused: Bool
+    @State private var capturedImage: UIImage?
+    @State private var showCamera = false
+    @State private var showTotemScan = false
 
     let onComplete: (() -> Void)?
 
@@ -34,16 +38,55 @@ struct JournalEntryView: View {
                 VStack(spacing: 0) {
                     ScrollView {
                         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+                            CyclePhaseIndicator()
+                                .frame(maxWidth: .infinity)
+
                             // Morning entry reference (for night sessions)
                             if viewModel.showMorningReference, let morningEntry = viewModel.morningEntry {
                                 MorningReferenceCard(entry: morningEntry)
                             }
 
                             // Prompt
-                            Text(viewModel.prompt)
-                                .font(Theme.Typography.body)
-                                .foregroundColor(.textSecondary)
-                                .padding(.horizontal, Theme.Spacing.sm)
+                            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                                HStack(spacing: Theme.Spacing.xs) {
+                                    Text(viewModel.isUsingAIPrompt ? "AI-crafted prompt" : "Reflective fallback")
+                                        .font(Theme.Typography.small)
+                                        .foregroundColor(.textMuted)
+
+                                    if viewModel.isLoadingPrompt {
+                                        ProgressView()
+                                            .scaleEffect(0.7)
+                                    }
+
+                                    Spacer()
+
+                                    Button {
+                                        Task {
+                                            await viewModel.loadPrompt(forceRefresh: true)
+                                        }
+                                    } label: {
+                                        Image(systemName: "arrow.clockwise")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(viewModel.canRefreshPrompt ? .primaryButton : .textMuted)
+                                    }
+                                    .disabled(!viewModel.canRefreshPrompt)
+                                }
+
+                                Text(viewModel.prompt)
+                                    .font(Theme.Typography.body)
+                                    .foregroundColor(.textSecondary)
+
+                                if let promptLoadError = viewModel.promptLoadError {
+                                    Text(promptLoadError)
+                                        .font(Theme.Typography.small)
+                                        .foregroundColor(.textMuted)
+                                }
+                            }
+                            .padding(.horizontal, Theme.Spacing.sm)
+
+                            if viewModel.sessionType != .anytime {
+                                entryModeSection
+                            }
 
                             // Text editor
                             ZStack(alignment: .topLeading) {
@@ -101,7 +144,44 @@ struct JournalEntryView: View {
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isTextFieldFocused = true
+                if viewModel.selectedEntryInputMode == .digital {
+                    isTextFieldFocused = true
+                }
+            }
+        }
+        .onChange(of: viewModel.selectedEntryInputMode) { newMode in
+            if newMode == .physical {
+                isTextFieldFocused = false
+                showCamera = true
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    isTextFieldFocused = true
+                }
+            }
+        }
+        .onChange(of: viewModel.requiresTotemScan) { requiresScan in
+            if requiresScan {
+                showTotemScan = true
+            }
+        }
+        .fullScreenCover(isPresented: $showTotemScan) {
+            TotemScanView(onUnlocked: {
+                dismiss()
+                onComplete?()
+            })
+        }
+        .sheet(isPresented: $showCamera) {
+            CameraCaptureView { image, jpegData in
+                capturedImage = image
+                do {
+                    let url = try savePhotoDataToDocuments(jpegData)
+                    viewModel.photoLocalPath = url.path
+                } catch {
+                    viewModel.errorMessage = "Failed to save photo"
+                }
+                Task {
+                    await viewModel.processPhotoOCR(imageData: jpegData)
+                }
             }
         }
     }
@@ -115,6 +195,79 @@ struct JournalEntryView: View {
         }
         .font(Theme.Typography.caption)
         .foregroundColor(viewModel.sessionType == .morning ? .morningStar : .primaryButton)
+    }
+
+    private var entryModeSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            Text("\(viewModel.sessionType.headerTitle) entry mode")
+                .font(Theme.Typography.caption)
+                .foregroundColor(.textSecondary)
+
+            Picker("Entry mode", selection: $viewModel.selectedEntryInputMode) {
+                ForEach(MorningEntryMode.allCases, id: \.self) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if viewModel.selectedEntryInputMode == .physical {
+                if let capturedImage {
+                    VStack(spacing: Theme.Spacing.sm) {
+                        Image(uiImage: capturedImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 180)
+                            .cornerRadius(Theme.CornerRadius.medium)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                            )
+
+                        if viewModel.isProcessingOCR {
+                            HStack(spacing: Theme.Spacing.xs) {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("Reading handwriting...")
+                                    .font(Theme.Typography.small)
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+
+                        if let ocrError = viewModel.ocrError {
+                            Text(ocrError)
+                                .font(Theme.Typography.small)
+                                .foregroundColor(.warning)
+                        }
+
+                        HStack(spacing: Theme.Spacing.sm) {
+                            Button {
+                                showCamera = true
+                            } label: {
+                                Label("Retake Photo", systemImage: "camera.fill")
+                                    .font(Theme.Typography.caption)
+                                    .foregroundColor(.primaryButton)
+                            }
+
+                            Button {
+                                self.capturedImage = nil
+                                viewModel.photoLocalPath = nil
+                                viewModel.ocrError = nil
+                            } label: {
+                                Text("Remove")
+                                    .font(Theme.Typography.caption)
+                                    .foregroundColor(.error)
+                            }
+                        }
+                    }
+                } else {
+                    Text("Take a photo of your handwritten entry and we'll transcribe it for you.")
+                        .font(Theme.Typography.small)
+                        .foregroundColor(.textSecondary)
+                }
+            }
+        }
+        .padding()
+        .cardStyle()
     }
 
     // MARK: - Bottom Bar
@@ -154,10 +307,21 @@ struct JournalEntryView: View {
         Task {
             let success = await viewModel.submitEntry()
             if success {
-                dismiss()
-                onComplete?()
+                // If totem scan is required, the fullScreenCover will handle dismissal
+                // Otherwise, dismiss now
+                if !viewModel.requiresTotemScan {
+                    dismiss()
+                    onComplete?()
+                }
             }
         }
+    }
+
+    private func savePhotoDataToDocuments(_ data: Data) throws -> URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileURL = docs.appendingPathComponent("journal-photo-\(UUID().uuidString).jpg")
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL
     }
 }
 

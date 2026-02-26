@@ -16,12 +16,12 @@ struct PermissionView: View {
         OnboardingPageTemplate(
             title: "Screen Time Access",
             subtitle: "Meridian needs permission to help you focus by blocking distracting apps",
-            buttonTitle: viewModel.permissionGranted ? "Continue" : "Grant Permission",
+            buttonTitle: viewModel.permissionGranted || viewModel.permissionSkipped ? "Continue" : "Grant Permission",
             isButtonEnabled: !isRequesting,
             showBackButton: true,
             onBack: { viewModel.goToPreviousStep() },
             onNext: {
-                if viewModel.permissionGranted {
+                if viewModel.permissionGranted || viewModel.permissionSkipped {
                     viewModel.goToNextStep()
                 } else {
                     requestPermission()
@@ -50,6 +50,19 @@ struct PermissionView: View {
                             .foregroundColor(.success)
                     }
                     .font(Theme.Typography.subheading)
+                }
+
+                // Skip option (for testing without Family Controls access)
+                if !viewModel.permissionGranted && !viewModel.permissionSkipped && !isRequesting {
+                    Button(action: {
+                        viewModel.skipPermission()
+                        viewModel.goToNextStep()
+                    }) {
+                        Text("Skip for now")
+                            .font(Theme.Typography.button)
+                            .foregroundColor(.textSecondary)
+                    }
+                    .padding(.top, Theme.Spacing.xs)
                 }
 
                 // Error message

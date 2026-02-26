@@ -8,15 +8,22 @@
 
 import SwiftUI
 import BackgroundTasks
+import UserNotifications
 
 @main
 struct MeridianApp: App {
     @StateObject private var lockStateManager = LockStateManager.shared
     @StateObject private var settingsService = SettingsService.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        // Register background tasks for morning and night lock triggers
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         registerBackgroundTasks()
+#if DEBUG
+        Task {
+            await AIQuestionServiceSelfTest.runIfNeeded()
+        }
+#endif
     }
 
     var body: some Scene {
@@ -25,6 +32,14 @@ struct MeridianApp: App {
                 .environmentObject(lockStateManager)
                 .environmentObject(settingsService)
                 .preferredColorScheme(.dark)
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        lockStateManager.checkForExpiredLocks()
+                        if !lockStateManager.isLocked {
+                            lockStateManager.startForegroundTimer()
+                        }
+                    }
+                }
         }
         .backgroundTask(.appRefresh(SchedulingService.morningLockTaskIdentifier)) {
             await SchedulingService.shared.handleMorningTask()
@@ -50,6 +65,14 @@ struct MeridianApp: App {
             guard let refreshTask = task as? BGAppRefreshTask else { return }
             SchedulingService.shared.handleBackgroundTask(refreshTask, type: .night)
         }
+
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: SchedulingService.graceHardLockTaskIdentifier,
+            using: nil
+        ) { task in
+            guard let refreshTask = task as? BGAppRefreshTask else { return }
+            SchedulingService.shared.handleGraceHardLockTask(refreshTask)
+        }
     }
 }
 
@@ -59,12 +82,13 @@ struct MeridianApp: App {
 struct RootView: View {
     @EnvironmentObject var lockStateManager: LockStateManager
     @EnvironmentObject var settingsService: SettingsService
+    @State private var hasRequestedNotificationPermission = false
 
     var body: some View {
         Group {
             if !settingsService.isOnboardingComplete {
                 OnboardingContainerView()
-            } else if lockStateManager.currentState != .unlocked {
+            } else if lockStateManager.currentState.isLocked {
                 JournalEntryView(sessionType: lockStateManager.currentSessionType)
             } else {
                 NightSkyView()
@@ -72,6 +96,16 @@ struct RootView: View {
         }
         .onAppear {
             lockStateManager.checkForExpiredLocks()
+            requestNotificationPermissionIfNeeded()
+        }
+    }
+
+    /// Request notification permission once when main app is shown (e.g. existing users who never got the prompt)
+    private func requestNotificationPermissionIfNeeded() {
+        guard settingsService.isOnboardingComplete, !hasRequestedNotificationPermission else { return }
+        hasRequestedNotificationPermission = true
+        Task {
+            _ = await SchedulingService.shared.requestNotificationAuthorization()
         }
     }
 }

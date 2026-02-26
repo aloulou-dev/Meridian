@@ -29,12 +29,18 @@ final class SettingsViewModel: ObservableObject {
 
     // Night session
     @Published var bedtimes: [DayOfWeek: Date] = [:]
+    @Published var nightGraceMinutes: Int {
+        didSet {
+            settingsService.nightGraceMinutes = max(1, nightGraceMinutes)
+        }
+    }
 
     // MARK: - Services
 
     private let settingsService = SettingsService.shared
     private let screenTimeService = ScreenTimeService.shared
     private let schedulingService = SchedulingService.shared
+    private let lockStateManager = LockStateManager.shared
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Computed Properties
@@ -52,10 +58,38 @@ final class SettingsViewModel: ObservableObject {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
     }
 
+    // MARK: - Totem Properties
+
+    /// Whether a totem has been configured
+    var hasTotemConfigured: Bool {
+        settingsService.hasTotemConfigured
+    }
+
+    /// Whether totem scanning is enabled
+    var isTotemEnabled: Bool {
+        settingsService.isTotemEnabled
+    }
+
+    /// Status text for totem section
+    var totemStatusText: String {
+        if hasTotemConfigured {
+            return "Active"
+        } else {
+            return "Not configured"
+        }
+    }
+
+    /// Clear the registered totem
+    func clearTotem() {
+        settingsService.clearTotem()
+        objectWillChange.send()
+    }
+
     // MARK: - Initialization
 
     init() {
         self.isMorningEnabled = settingsService.isMorningEnabled
+        self.nightGraceMinutes = settingsService.nightGraceMinutes
         loadSettings()
         observeScreenTimeChanges()
     }
@@ -122,12 +156,82 @@ final class SettingsViewModel: ObservableObject {
 
     func saveBlockedApps() {
         screenTimeService.blockedAppsSelection = blockedAppsSelection
+        screenTimeService.rescheduleNightMonitoring()
     }
 
     // MARK: - Scheduling
 
     private func rescheduleTasksIfNeeded() {
         schedulingService.scheduleAllTasks()
+        if !lockStateManager.isLocked {
+            lockStateManager.startForegroundTimer()
+        }
+    }
+
+    // MARK: - Notifications
+
+    @Published var isSendingTestNotification = false
+
+    func sendTestNotification() {
+        isSendingTestNotification = true
+        Task {
+            await schedulingService.sendTestNotification()
+            await MainActor.run { isSendingTestNotification = false }
+        }
+    }
+
+    // MARK: - Demo Controls
+
+    func triggerMorningLockNow() {
+        lockStateManager.enterMorningLock()
+    }
+
+    func triggerNightSoftLockNow() {
+        lockStateManager.enterNightSoftLock()
+    }
+
+    func triggerGraceNow() {
+        lockStateManager.beginNightGracePeriod()
+    }
+
+    func triggerHardLockNow() {
+        lockStateManager.enterNightHardLock()
+    }
+
+    // MARK: - App Blocking Test Controls
+
+    @Published var blockingStatusMessage: String?
+
+    var areAppsBlocked: Bool {
+        screenTimeService.areAppsLocked
+    }
+
+    var isScreenTimeAuthorized: Bool {
+        screenTimeService.isAuthorized
+    }
+
+    var hasAppsSelected: Bool {
+        screenTimeService.hasBlockedApps
+    }
+
+    func blockAppsNow() {
+        if !screenTimeService.isAuthorized {
+            blockingStatusMessage = "Screen Time not authorized. Grant permission in Blocked Apps section first."
+            return
+        }
+        if !screenTimeService.hasBlockedApps {
+            blockingStatusMessage = "No apps selected. Select apps to block first."
+            return
+        }
+        screenTimeService.lockApps()
+        blockingStatusMessage = "Apps blocked successfully!"
+        objectWillChange.send()
+    }
+
+    func unblockAppsNow() {
+        screenTimeService.unlockApps()
+        blockingStatusMessage = "Apps unblocked."
+        objectWillChange.send()
     }
 
     // MARK: - Reset
@@ -136,5 +240,6 @@ final class SettingsViewModel: ObservableObject {
         settingsService.resetAllSettings()
         screenTimeService.reset()
         loadSettings()
+        rescheduleTasksIfNeeded()
     }
 }

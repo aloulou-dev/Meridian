@@ -10,6 +10,7 @@ import Combine
 
 /// Service for managing user settings and preferences stored in UserDefaults
 final class SettingsService: ObservableObject {
+    static let appGroupIdentifier = "group.com.meridian.app"
     // MARK: - Singleton
 
     static let shared = SettingsService()
@@ -29,6 +30,13 @@ final class SettingsService: ObservableObject {
         static let entriesCreatedToday = "meridian.entriesCreatedToday"
         static let lastEntryTimestamp = "meridian.lastEntryTimestamp"
         static let entriesCountDate = "meridian.entriesCountDate"
+        static let morningEntryMode = "meridian.morningEntryMode"
+        static let nightGraceMinutes = "meridian.nightGraceMinutes"
+        static let nightGraceEndsAt = "meridian.nightGraceEndsAt"
+        static let totemIdentifier = "meridian.totemIdentifier"
+        static let isTotemEnabled = "meridian.isTotemEnabled"
+        static let aiPromptsEnabled = "meridian.aiPromptsEnabled"
+        static let aiModelName = "meridian.aiModelName"
     }
 
     // MARK: - UserDefaults
@@ -45,19 +53,84 @@ final class SettingsService: ObservableObject {
         didSet { defaults.set(isMorningEnabled, forKey: Keys.morningEnabled) }
     }
 
+    @Published var morningEntryMode: MorningEntryMode {
+        didSet { defaults.set(morningEntryMode.rawValue, forKey: Keys.morningEntryMode) }
+    }
+
+    @Published var isAIPromptsEnabled: Bool {
+        didSet { defaults.set(isAIPromptsEnabled, forKey: Keys.aiPromptsEnabled) }
+    }
+
+    @Published var aiModelName: String {
+        didSet { defaults.set(aiModelName, forKey: Keys.aiModelName) }
+    }
+
     // MARK: - Initialization
 
     private init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
+        self.defaults = UserDefaults(suiteName: Self.appGroupIdentifier) ?? defaults
 
         // Load initial values
         self.isOnboardingComplete = defaults.bool(forKey: Keys.onboardingComplete)
         self.isMorningEnabled = defaults.bool(forKey: Keys.morningEnabled)
+        self.morningEntryMode = MorningEntryMode(
+            rawValue: defaults.string(forKey: Keys.morningEntryMode) ?? MorningEntryMode.digital.rawValue
+        ) ?? .digital
+        self.isAIPromptsEnabled = defaults.object(forKey: Keys.aiPromptsEnabled) as? Bool ?? true
+        self.aiModelName = defaults.string(forKey: Keys.aiModelName) ?? "gpt-4.1-mini"
 
         // Set default morning enabled to true if not set
         if !defaults.bool(forKey: Keys.morningEnabled) && !defaults.bool(forKey: Keys.onboardingComplete) {
             self.isMorningEnabled = true
         }
+    }
+
+    // MARK: - Grace Period
+
+    var nightGraceMinutes: Int {
+        get {
+            let value = defaults.integer(forKey: Keys.nightGraceMinutes)
+            return value > 0 ? value : 15
+        }
+        set {
+            defaults.set(max(1, newValue), forKey: Keys.nightGraceMinutes)
+        }
+    }
+
+    var nightGraceEndsAt: Date? {
+        get { defaults.object(forKey: Keys.nightGraceEndsAt) as? Date }
+        set { defaults.set(newValue, forKey: Keys.nightGraceEndsAt) }
+    }
+
+    // MARK: - Totem Settings
+
+    /// The registered totem identifier (QR code content)
+    var totemIdentifier: String? {
+        get { defaults.string(forKey: Keys.totemIdentifier) }
+        set { defaults.set(newValue, forKey: Keys.totemIdentifier) }
+    }
+
+    /// Whether totem scanning is enabled for unlocking
+    var isTotemEnabled: Bool {
+        get { defaults.bool(forKey: Keys.isTotemEnabled) }
+        set { defaults.set(newValue, forKey: Keys.isTotemEnabled) }
+    }
+
+    /// Whether a totem has been configured and is active
+    var hasTotemConfigured: Bool {
+        isTotemEnabled && totemIdentifier != nil
+    }
+
+    /// Register a new totem with the given identifier
+    func registerTotem(_ identifier: String) {
+        totemIdentifier = identifier
+        isTotemEnabled = true
+    }
+
+    /// Clear the registered totem
+    func clearTotem() {
+        totemIdentifier = nil
+        isTotemEnabled = false
     }
 
     // MARK: - Morning Times
@@ -66,8 +139,8 @@ final class SettingsService: ObservableObject {
     func getMorningTime(for day: DayOfWeek) -> Date? {
         guard isMorningEnabled else { return nil }
 
-        if let times = getMorningTimes() {
-            return times[day]
+        if let times = getMorningTimes(), let time = times[day] {
+            return time
         }
         return DayOfWeek.defaultMorningTime
     }
@@ -113,9 +186,10 @@ final class SettingsService: ObservableObject {
         return day.defaultBedtime
     }
 
-    /// Get the night lock time (2 hours before bedtime) for a specific day
+    /// Get the night lock time for a specific day.
+    /// The configured "bedtime" is treated as the exact lock/session time.
     func getNightLockTime(for day: DayOfWeek) -> Date {
-        getBedtime(for: day).subtractingHours(2)
+        getBedtime(for: day)
     }
 
     /// Get all bedtimes as a dictionary
@@ -270,7 +344,14 @@ final class SettingsService: ObservableObject {
             Keys.appVersion,
             Keys.entriesCreatedToday,
             Keys.lastEntryTimestamp,
-            Keys.entriesCountDate
+            Keys.entriesCountDate,
+            Keys.morningEntryMode,
+            Keys.nightGraceMinutes,
+            Keys.nightGraceEndsAt,
+            Keys.totemIdentifier,
+            Keys.isTotemEnabled,
+            Keys.aiPromptsEnabled,
+            Keys.aiModelName
         ]
 
         for key in allKeys {
@@ -280,6 +361,9 @@ final class SettingsService: ObservableObject {
         // Reset published properties
         isOnboardingComplete = false
         isMorningEnabled = true
+        morningEntryMode = .digital
+        isAIPromptsEnabled = true
+        aiModelName = "gpt-4.1-mini"
     }
 
     // MARK: - Default Times Setup

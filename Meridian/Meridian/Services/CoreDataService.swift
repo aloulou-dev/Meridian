@@ -35,12 +35,16 @@ final class CoreDataService {
     ///   - content: The journal entry text
     ///   - sessionType: The type of session (morning, night, anytime)
     ///   - morningReferenceID: Optional ID of the morning entry to reference (for night entries)
+    ///   - entryMode: Optional source mode (physical/digital) used at capture time
+    ///   - photoLocalPath: Optional local file path for captured photo proof
     /// - Returns: The created JournalEntry or nil if creation failed
     @discardableResult
     func createEntry(
         content: String,
         sessionType: SessionType,
-        morningReferenceID: UUID? = nil
+        morningReferenceID: UUID? = nil,
+        entryMode: String? = nil,
+        photoLocalPath: String? = nil
     ) -> JournalEntry? {
         let context = viewContext
         let entry = JournalEntry(context: context)
@@ -51,6 +55,8 @@ final class CoreDataService {
         entry.content = content
         entry.timestamp = Date()
         entry.morningReferenceID = morningReferenceID
+        entry.entryMode = entryMode
+        entry.photoLocalPath = photoLocalPath
 
         // Generate and cache star position
         let position = JournalEntry.generateStarPosition(from: id)

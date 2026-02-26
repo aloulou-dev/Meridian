@@ -19,11 +19,18 @@ final class SchedulingService {
 
     static let morningLockTaskIdentifier = "com.meridian.morninglock"
     static let nightLockTaskIdentifier = "com.meridian.nightlock"
+    static let graceHardLockTaskIdentifier = "com.meridian.gracehardlock"
+
+    /// Fixed IDs for scheduled notifications (so we can replace them and handle tap)
+    static let morningNotificationId = "com.meridian.notification.morning"
+    static let nightNotificationId = "com.meridian.notification.night"
+    static let graceEndingNotificationId = "com.meridian.notification.graceEnding"
 
     // MARK: - Properties
 
     private let settingsService = SettingsService.shared
-    private let lockStateManager = LockStateManager.shared
+    private let screenTimeService = ScreenTimeService.shared
+    private var lockStateManager: LockStateManager { LockStateManager.shared }
 
     // MARK: - Initialization
 
@@ -43,6 +50,12 @@ final class SchedulingService {
 
         // Always schedule night task
         scheduleNightTask()
+
+        // Schedule local notifications at exact times (deliver even if app isn't running)
+        scheduleScheduledNotifications()
+
+        // Use Screen Time's monitor extension for reliable off-app locking.
+        screenTimeService.rescheduleNightMonitoring()
 
         print("All background tasks scheduled")
     }
@@ -87,6 +100,7 @@ final class SchedulingService {
     func cancelAllTasks() {
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.morningLockTaskIdentifier)
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.nightLockTaskIdentifier)
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.graceHardLockTaskIdentifier)
         print("All background tasks cancelled")
     }
 
@@ -129,12 +143,12 @@ final class SchedulingService {
         return nil
     }
 
-    /// Calculate the next night lock time (2 hours before bedtime)
+    /// Calculate the next night lock time.
     private func calculateNextNightTime() -> Date? {
         let now = Date()
         let today = DayOfWeek.today
 
-        // Get today's night lock time (bedtime - 2 hours)
+        // Get today's configured night lock time
         let nightLockTime = settingsService.getNightLockTime(for: today)
         let todayNight = combineDateWithTime(date: now, time: nightLockTime)
 
@@ -178,7 +192,8 @@ final class SchedulingService {
             title: "Time to journal",
             body: "Set your intentions for the day"
         )
-        scheduleMorningTask() // Reschedule for next occurrence
+        scheduleMorningTask()
+        scheduleScheduledNotifications()
     }
 
     /// Handle the night lock background task (async version for SwiftUI)
@@ -189,7 +204,8 @@ final class SchedulingService {
             title: "Time to reflect",
             body: "How did your day go?"
         )
-        scheduleNightTask() // Reschedule for next occurrence
+        scheduleNightTask()
+        scheduleScheduledNotifications()
     }
 
     /// Handle background task (BGTask version)
@@ -213,9 +229,20 @@ final class SchedulingService {
         }
     }
 
+    /// Handle grace expiry background task
+    func handleGraceHardLockTask(_ task: BGAppRefreshTask) {
+        task.expirationHandler = {
+            task.setTaskCompleted(success: false)
+        }
+        Task { @MainActor in
+            lockStateManager.enterNightHardLock()
+            task.setTaskCompleted(success: true)
+        }
+    }
+
     // MARK: - Notifications
 
-    /// Request notification authorization
+    /// Request notification authorization (call on app launch / onboarding complete)
     func requestNotificationAuthorization() async -> Bool {
         let center = UNUserNotificationCenter.current()
         do {
@@ -226,21 +253,106 @@ final class SchedulingService {
         }
     }
 
-    /// Send a local notification
+    /// Schedule local notifications for the next morning/night lock times.
+    func scheduleScheduledNotifications() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(
+            withIdentifiers: [Self.morningNotificationId, Self.nightNotificationId]
+        )
+
+        let calendar = Calendar.current
+
+        if settingsService.isMorningEnabled, let nextMorning = calculateNextMorningTime() {
+            let comps = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: nextMorning)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+            let content = UNMutableNotificationContent()
+            content.title = "Time to journal"
+            content.body = "Set your intentions for the day"
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: Self.morningNotificationId, content: content, trigger: trigger)
+            center.add(request) { error in
+                if let error = error { print("Failed to schedule morning notification: \(error)") }
+                else { print("Morning notification scheduled for \(nextMorning)") }
+            }
+        }
+
+        if let nextNight = calculateNextNightTime() {
+            let comps = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: nextNight)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+            let content = UNMutableNotificationContent()
+            content.title = "Time to reflect"
+            content.body = "How did your day go?"
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: Self.nightNotificationId, content: content, trigger: trigger)
+            center.add(request) { error in
+                if let error = error { print("Failed to schedule night notification: \(error)") }
+                else { print("Night notification scheduled for \(nextNight)") }
+            }
+        }
+    }
+
+    /// Schedule one-time reminder for grace period ending and hard-lock return
+    func scheduleGraceExpiryNotification(at date: Date) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.graceEndingNotificationId])
+        let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+        let content = UNMutableNotificationContent()
+        content.title = "Grace period ending"
+        content.body = "Sanctuary Mode is returning now."
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: Self.graceEndingNotificationId,
+            content: content,
+            trigger: trigger
+        )
+        center.add(request) { error in
+            if let error {
+                print("Failed to schedule grace-ending notification: \(error)")
+            }
+        }
+        scheduleGraceHardLockTask(at: date)
+    }
+
+    private func scheduleGraceHardLockTask(at date: Date) {
+        let request = BGAppRefreshTaskRequest(identifier: Self.graceHardLockTaskIdentifier)
+        request.earliestBeginDate = date
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            print("Failed to schedule grace hard-lock task: \(error)")
+        }
+    }
+
+    /// Send a test notification (fires in ~1 second so it shows even when app is in foreground)
+    func sendTestNotification() async {
+        let center = UNUserNotificationCenter.current()
+        let content = UNMutableNotificationContent()
+        content.title = "Meridian test"
+        content.body = "If you see this, notifications are working."
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: "com.meridian.test", content: content, trigger: trigger)
+        do {
+            try await center.add(request)
+            print("Test notification scheduled")
+        } catch {
+            print("Failed to send test notification: \(error)")
+        }
+    }
+
+    /// Send a local notification (immediate)
     private func sendNotification(title: String, body: String) async {
         let center = UNUserNotificationCenter.current()
-
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
-
         let request = UNNotificationRequest(
             identifier: UUID().uuidString,
             content: content,
-            trigger: nil // Deliver immediately
+            trigger: nil
         )
-
         do {
             try await center.add(request)
             print("Notification sent: \(title)")

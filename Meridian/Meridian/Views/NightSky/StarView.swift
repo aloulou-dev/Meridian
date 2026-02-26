@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-/// A single star representing a journal entry
+/// A single star representing one day (morning + night sessions combined)
 struct StarView: View {
-    let entry: JournalEntry
+    let dayStar: DayStar
     let size: CGSize
     let onTap: () -> Void
 
@@ -20,23 +20,23 @@ struct StarView: View {
 
     private var position: CGPoint {
         CGPoint(
-            x: entry.starPositionX * size.width,
-            y: entry.starPositionY * size.height
+            x: dayStar.position.x * size.width,
+            y: dayStar.position.y * size.height
         )
     }
 
     private var starColor: Color {
-        entry.isMorning ? .morningStar : .nightStar
+        (dayStar.latestEntry?.isMorning ?? false) ? .morningStar : .nightStar
     }
 
     private var glowColor: Color {
-        entry.isMorning ? .morningGlow : .nightGlow
+        (dayStar.latestEntry?.isMorning ?? false) ? .morningGlow : .nightGlow
     }
 
     private var starSize: CGFloat {
-        // Vary size slightly based on word count
         let baseSize: CGFloat = 20
-        let wordBonus = min(CGFloat(entry.wordCount) / 50.0, 1.0) * 8
+        let totalWords = dayStar.entries.reduce(0) { $0 + $1.wordCount }
+        let wordBonus = min(CGFloat(totalWords) / 50.0, 1.0) * 8
         return baseSize + wordBonus
     }
 
@@ -86,7 +86,7 @@ struct StarView: View {
         .onTapGesture {
             onTap()
         }
-        .accessibilityLabel("\(entry.sessionType.headerTitle) entry from \(entry.timestamp.shortMonthDay)")
+        .accessibilityLabel("Day \(dayStar.date.shortMonthDay)")
         .accessibilityHint("Double tap to view entry")
     }
 }
