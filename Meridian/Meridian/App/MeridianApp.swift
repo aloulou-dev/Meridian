@@ -20,6 +20,7 @@ struct MeridianApp: App {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
         registerBackgroundTasks()
 #if DEBUG
+        CoreDataService.shared.seedSampleEntries()
         Task {
             await AIQuestionServiceSelfTest.runIfNeeded()
         }
@@ -88,6 +89,8 @@ struct RootView: View {
         Group {
             if !settingsService.isOnboardingComplete {
                 OnboardingContainerView()
+            } else if !settingsService.hasSeenTryJournalPrompt {
+                TryJournalPromptView()
             } else if lockStateManager.currentState.isLocked {
                 JournalEntryView(sessionType: lockStateManager.currentSessionType)
             } else {

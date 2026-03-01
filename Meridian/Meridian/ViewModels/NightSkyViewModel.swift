@@ -39,6 +39,16 @@ struct DayStar: Identifiable {
             .filter { $0.sessionType == .anytime }
             .sorted { ($0.timestamp ?? .distantPast) < ($1.timestamp ?? .distantPast) }
     }
+
+    /// Total word count across all entries
+    var totalWordCount: Int {
+        entries.reduce(0) { $0 + $1.wordCount }
+    }
+
+    /// Week identifier for constellation grouping
+    var weekIdentifier: WeekIdentifier {
+        WeekIdentifier(from: date)
+    }
 }
 
 /// ViewModel for the Night Sky view
@@ -69,6 +79,38 @@ final class NightSkyViewModel: ObservableObject {
 
     var entryCount: Int {
         starDays.count
+    }
+
+    /// Pre-computed renderable stars for Canvas-based rendering
+    var renderableStars: [RenderableStar] {
+        starDays.map { RenderableStar.from(dayStar: $0) }
+    }
+
+    /// Constellation lines connecting same-week stars
+    var constellationLines: [ConstellationLine] {
+        // Group stars by week
+        let byWeek = Dictionary(grouping: starDays) { $0.weekIdentifier }
+        var lines: [ConstellationLine] = []
+
+        for (week, starsInWeek) in byWeek {
+            // Need at least 2 stars to form a constellation
+            guard starsInWeek.count >= Theme.Constellation.minimumStarsForConstellation else {
+                continue
+            }
+
+            // Sort by date and connect sequentially
+            let sorted = starsInWeek.sorted { $0.date < $1.date }
+            for i in 0..<(sorted.count - 1) {
+                lines.append(ConstellationLine(
+                    startStarID: sorted[i].date,
+                    endStarID: sorted[i + 1].date,
+                    weekIdentifier: week,
+                    opacity: Theme.Constellation.lineOpacity
+                ))
+            }
+        }
+
+        return lines
     }
 
     // MARK: - Initialization

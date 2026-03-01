@@ -70,6 +70,32 @@ struct WelcomeView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, Theme.Spacing.lg)
 
+            // Name input
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                Text("What should we call you?")
+                    .font(Theme.Typography.caption)
+                    .foregroundColor(.textSecondary)
+
+                TextField("Your name", text: $viewModel.userName)
+                    .font(Theme.Typography.body)
+                    .foregroundColor(.textPrimary)
+                    .padding()
+                    .background(Color.cardBackground)
+                    .cornerRadius(Theme.CornerRadius.medium)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.CornerRadius.medium)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                    .submitLabel(.continue)
+                    .onSubmit {
+                        if viewModel.isNameValid {
+                            viewModel.goToNextStep()
+                        }
+                    }
+            }
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.top, Theme.Spacing.md)
+
             Spacer()
 
             // Get Started button
@@ -78,8 +104,9 @@ struct WelcomeView: View {
                     Text("Get Started")
                     Image(systemName: "arrow.right")
                 }
-                .primaryButtonStyle()
+                .primaryButtonStyle(isEnabled: viewModel.isNameValid)
             }
+            .disabled(!viewModel.isNameValid)
             .padding(.horizontal, Theme.Spacing.md)
             .padding(.bottom, Theme.Spacing.lg)
         }

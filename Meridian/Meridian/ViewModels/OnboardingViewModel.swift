@@ -61,6 +61,13 @@ final class OnboardingViewModel: ObservableObject {
     // Night configuration
     @Published var bedtimes: [DayOfWeek: Date] = [:]
 
+    // User name
+    @Published var userName: String = ""
+
+    var isNameValid: Bool {
+        !userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - Services
 
     private let settingsService = SettingsService.shared
@@ -96,7 +103,7 @@ final class OnboardingViewModel: ObservableObject {
     var canGoNext: Bool {
         switch currentStep {
         case .welcome:
-            return true
+            return isNameValid
         case .permission:
             return permissionGranted || permissionSkipped
         case .appSelection:
@@ -231,6 +238,9 @@ final class OnboardingViewModel: ObservableObject {
     // MARK: - Complete Onboarding
 
     func completeOnboarding() {
+        // Save user name
+        settingsService.userName = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+
         // Save blocked apps
         screenTimeService.blockedAppsSelection = blockedAppsSelection
 

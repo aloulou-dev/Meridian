@@ -11,6 +11,7 @@ import SwiftUI
 struct NightSkyView: View {
     @StateObject private var viewModel = NightSkyViewModel()
     @EnvironmentObject var lockStateManager: LockStateManager
+    @EnvironmentObject var settingsService: SettingsService
 
     var body: some View {
         ZStack {
@@ -22,7 +23,15 @@ struct NightSkyView: View {
             if viewModel.isEmpty {
                 EmptyNightSkyView()
             } else {
-                starsView
+                NightSkyCanvasView(
+                    renderableStars: viewModel.renderableStars,
+                    constellationLines: viewModel.constellationLines,
+                    onStarTapped: { date in
+                        if let dayStar = viewModel.starDays.first(where: { $0.date == date }) {
+                            viewModel.viewDayDetail(dayStar)
+                        }
+                    }
+                )
             }
 
             // Navigation overlay
@@ -56,22 +65,6 @@ struct NightSkyView: View {
         }
     }
 
-    // MARK: - Stars View
-
-    private var starsView: some View {
-        GeometryReader { geometry in
-            ZStack {
-                ForEach(viewModel.starDays) { dayStar in
-                    StarView(
-                        dayStar: dayStar,
-                        size: geometry.size,
-                        onTap: { viewModel.viewDayDetail(dayStar) }
-                    )
-                }
-            }
-        }
-    }
-
     // MARK: - Top Bar
 
     private var topBar: some View {
@@ -87,10 +80,18 @@ struct NightSkyView: View {
 
             Spacer()
 
-            // Date display
-            Text(Date().shortMonthDay)
-                .font(Theme.Typography.subheading)
-                .foregroundColor(.textSecondary)
+            // Greeting and date display
+            VStack(spacing: 2) {
+                if !settingsService.userName.isEmpty {
+                    Text("Welcome Back, \(settingsService.userName)")
+                        .font(Theme.Typography.caption)
+                        .foregroundColor(.textSecondary)
+                }
+
+                Text(Date().shortMonthDay)
+                    .font(Theme.Typography.subheading)
+                    .foregroundColor(.textSecondary)
+            }
 
             Spacer()
 
@@ -324,4 +325,5 @@ struct EntryDetailView: View {
 #Preview {
     NightSkyView()
         .environmentObject(LockStateManager.shared)
+        .environmentObject(SettingsService.shared)
 }

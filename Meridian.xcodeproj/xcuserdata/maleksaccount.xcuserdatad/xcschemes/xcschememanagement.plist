@@ -7,17 +7,35 @@
 		<key>Meridian.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-		<key>MeridianSheildAction.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
-		<key>MeridianSheildConfig.xcscheme_^#shared#^_</key>
+		<key>MeridianSheildAction.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
+		</dict>
+		<key>MeridianSheildConfig.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>920117092F4B8F5F00FC8A5A</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>920117202F4B901700FC8A5A</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>92EAF77C2F3A6DEF0064D097</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

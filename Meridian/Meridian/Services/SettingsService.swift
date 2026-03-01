@@ -35,6 +35,8 @@ final class SettingsService: ObservableObject {
         static let nightGraceEndsAt = "meridian.nightGraceEndsAt"
         static let aiPromptsEnabled = "meridian.aiPromptsEnabled"
         static let aiModelName = "meridian.aiModelName"
+        static let userName = "meridian.userName"
+        static let hasSeenTryJournalPrompt = "meridian.hasSeenTryJournalPrompt"
     }
 
     // MARK: - UserDefaults
@@ -63,6 +65,14 @@ final class SettingsService: ObservableObject {
         didSet { defaults.set(aiModelName, forKey: Keys.aiModelName) }
     }
 
+    @Published var userName: String {
+        didSet { defaults.set(userName, forKey: Keys.userName) }
+    }
+
+    @Published var hasSeenTryJournalPrompt: Bool {
+        didSet { defaults.set(hasSeenTryJournalPrompt, forKey: Keys.hasSeenTryJournalPrompt) }
+    }
+
     // MARK: - Initialization
 
     private init(defaults: UserDefaults = .standard) {
@@ -76,6 +86,8 @@ final class SettingsService: ObservableObject {
         ) ?? .digital
         self.isAIPromptsEnabled = defaults.object(forKey: Keys.aiPromptsEnabled) as? Bool ?? true
         self.aiModelName = defaults.string(forKey: Keys.aiModelName) ?? "gpt-4.1-mini"
+        self.userName = defaults.string(forKey: Keys.userName) ?? ""
+        self.hasSeenTryJournalPrompt = defaults.bool(forKey: Keys.hasSeenTryJournalPrompt)
 
         // Set default morning enabled to true if not set
         if !defaults.bool(forKey: Keys.morningEnabled) && !defaults.bool(forKey: Keys.onboardingComplete) {
@@ -316,7 +328,9 @@ final class SettingsService: ObservableObject {
             Keys.nightGraceMinutes,
             Keys.nightGraceEndsAt,
             Keys.aiPromptsEnabled,
-            Keys.aiModelName
+            Keys.aiModelName,
+            Keys.userName,
+            Keys.hasSeenTryJournalPrompt
         ]
 
         for key in allKeys {
@@ -329,6 +343,8 @@ final class SettingsService: ObservableObject {
         morningEntryMode = .digital
         isAIPromptsEnabled = true
         aiModelName = "gpt-4.1-mini"
+        userName = ""
+        hasSeenTryJournalPrompt = false
     }
 
     // MARK: - Default Times Setup
