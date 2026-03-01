@@ -112,7 +112,7 @@ All spacing, typography, colors, and animations are defined in the `Theme` enum.
 
 ## Development
 
-Debug builds automatically seed ~24 sample journal entries on first launch when the Core Data store is empty. These entries span the last 30 days with a mix of morning, night, and anytime sessions, so the NightSky home screen is populated with stars for visual testing. The seed data is gated behind `#if DEBUG` and will not run in release builds. To re-seed, delete the app from the simulator to clear Core Data.
+Debug builds automatically seed ~30 sample journal entries across 20 unique days on first launch when the Core Data store is empty. These entries span the last 30 days with a mix of morning, night, and anytime sessions, so the NightSky home screen is populated with 20 stars (one per day) for visual testing. The seed data is gated behind `#if DEBUG` and will not run in release builds. To re-seed, delete the app from the simulator to clear Core Data.
 
 ## Key Technologies
 
