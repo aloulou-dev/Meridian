@@ -125,4 +125,157 @@ enum Theme {
         /// Minimum seconds between entries
         static let minimumEntryInterval: TimeInterval = 1.0
     }
+
+    // MARK: - Star Rendering
+
+    enum Star {
+        /// Minimum star size in points
+        static let minSize: CGFloat = 12
+
+        /// Maximum star size in points
+        static let maxSize: CGFloat = 32
+
+        /// Size increase per word (capped at maxSize)
+        static let sizeWordCountFactor: CGFloat = 0.15
+
+        /// Number of glow layers for star rendering
+        static let glowLayers: Int = 4
+
+        /// Minimum hit target size for accessibility (44pt recommended)
+        static let minHitTargetSize: CGFloat = 44
+
+        /// Twinkle animation duration range
+        static let twinkleDurationMin: Double = 2.0
+        static let twinkleDurationMax: Double = 4.0
+
+        /// Glow layer configurations (radius multiplier, opacity, blur)
+        static let outerHaloRadiusMultiplier: CGFloat = 3.0
+        static let outerHaloOpacity: Double = 0.1
+        static let outerHaloBlur: CGFloat = 20
+
+        static let midGlowRadiusMultiplier: CGFloat = 2.0
+        static let midGlowOpacity: Double = 0.2
+        static let midGlowBlur: CGFloat = 12
+
+        static let innerGlowRadiusMultiplier: CGFloat = 1.3
+        static let innerGlowOpacity: Double = 0.4
+        static let innerGlowBlur: CGFloat = 6
+
+        static let coreRadiusMultiplier: CGFloat = 0.4
+        static let coreOpacity: Double = 0.9
+
+        /// Diffraction spike settings
+        static let diffractionSpikeThreshold: CGFloat = 20
+        static let diffractionSpikeLengthMultiplier: CGFloat = 1.5
+        static let diffractionSpikeWidth: CGFloat = 1.5
+        static let diffractionSpikeOpacity: Double = 0.6
+    }
+
+    // MARK: - Constellation
+
+    enum Constellation {
+        /// Line width for constellation connections
+        static let lineWidth: CGFloat = 0.5
+
+        /// Line opacity (faint connections)
+        static let lineOpacity: Double = 0.15
+
+        /// Dash pattern for constellation lines
+        static let lineDashPattern: [CGFloat] = [4, 8]
+
+        /// Minimum stars in a week to form constellation
+        static let minimumStarsForConstellation: Int = 2
+    }
+
+    // MARK: - Nebula
+
+    enum Nebula {
+        /// Number of nebula clouds in background
+        static let cloudCount: Int = 4
+
+        /// Blur radius for nebula effect
+        static let blurRadius: CGFloat = 60
+
+        /// Base opacity for nebula clouds
+        static let opacity: Double = 0.08
+
+        /// Parallax multiplier for nebula layer (barely moves)
+        static let parallaxMultiplier: CGFloat = 0.15
+    }
+
+    // MARK: - Virtual Canvas
+
+    enum VirtualCanvas {
+        /// Width multiplier relative to screen width
+        static let widthMultiplier: CGFloat = 1.5
+
+        /// Height multiplier relative to screen height
+        static let heightMultiplier: CGFloat = 3.0
+    }
+
+    // MARK: - Background Star Field
+
+    enum BackgroundStarField {
+        /// Number of decorative background stars
+        static let count: Int = 150
+
+        /// Minimum star size in points
+        static let minSize: CGFloat = 0.5
+
+        /// Maximum star size in points
+        static let maxSize: CGFloat = 2.0
+
+        /// Minimum opacity for background stars
+        static let minOpacity: Double = 0.2
+
+        /// Maximum opacity for background stars
+        static let maxOpacity: Double = 0.8
+
+        /// Parallax multiplier (moves slower than journal stars)
+        static let parallaxMultiplier: CGFloat = 0.3
+
+        /// Minimum twinkle animation duration
+        static let twinkleMinDuration: Double = 2.0
+
+        /// Maximum twinkle animation duration
+        static let twinkleMaxDuration: Double = 5.0
+
+        /// Maximum twinkle phase offset for staggered start
+        static let twinkleMaxPhaseOffset: Double = 2.0
+
+        /// Seed for deterministic star field generation
+        static let seed: UInt64 = 12345
+    }
+
+    // MARK: - Parallax
+
+    enum Parallax {
+        /// Maximum drag offset in any direction
+        static let maxOffset: CGFloat = 150
+
+        /// Deceleration rate for momentum
+        static let decelerationRate: CGFloat = 0.95
+
+        /// Minimum velocity to trigger momentum
+        static let minimumVelocity: CGFloat = 50
+    }
+
+    // MARK: - Zoom
+
+    enum Zoom {
+        /// Minimum zoom scale (zoomed out)
+        static let minScale: CGFloat = 0.5
+
+        /// Maximum zoom scale (zoomed in)
+        static let maxScale: CGFloat = 3.0
+
+        /// Default zoom scale
+        static let defaultScale: CGFloat = 1.0
+
+        /// Animation duration for zoom reset
+        static let resetAnimationDuration: Double = 0.3
+
+        /// Double-tap zoom scale
+        static let doubleTapScale: CGFloat = 2.0
+    }
 }

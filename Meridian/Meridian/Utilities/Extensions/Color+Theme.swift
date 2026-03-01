@@ -68,6 +68,100 @@ extension Color {
     /// Cyan accent for star highlights
     static let starCyan = Color(hex: "#A5F3FC")
 
+    // MARK: - Star Color Spectrum
+
+    /// Cool blue-white for night entries
+    static let starSpectrumCool = Color(hex: "#B8D4E8")
+
+    /// Neutral cream for anytime entries
+    static let starSpectrumNeutral = Color(hex: "#F5F5DC")
+
+    /// Warm orange for morning entries
+    static let starSpectrumWarm = Color(hex: "#FFB347")
+
+    /// Calculate star color based on temperature (0.0 = cool, 0.5 = neutral, 1.0 = warm)
+    static func starColor(temperature: Double) -> Color {
+        let clampedTemp = max(0, min(1, temperature))
+
+        if clampedTemp < 0.5 {
+            // Interpolate between cool and neutral
+            let t = clampedTemp * 2
+            return interpolate(from: starSpectrumCool, to: starSpectrumNeutral, t: t)
+        } else {
+            // Interpolate between neutral and warm
+            let t = (clampedTemp - 0.5) * 2
+            return interpolate(from: starSpectrumNeutral, to: starSpectrumWarm, t: t)
+        }
+    }
+
+    /// Linear interpolation between two colors
+    static func interpolate(from: Color, to: Color, t: Double) -> Color {
+        // Convert to RGB components
+        let fromComponents = from.rgbComponents
+        let toComponents = to.rgbComponents
+
+        let r = fromComponents.red + (toComponents.red - fromComponents.red) * t
+        let g = fromComponents.green + (toComponents.green - fromComponents.green) * t
+        let b = fromComponents.blue + (toComponents.blue - fromComponents.blue) * t
+
+        return Color(red: r, green: g, blue: b)
+    }
+
+    /// RGB components of a color
+    var rgbComponents: (red: Double, green: Double, blue: Double) {
+        #if canImport(UIKit)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return (Double(red), Double(green), Double(blue))
+        #else
+        return (0.5, 0.5, 0.5)
+        #endif
+    }
+
+    // MARK: - Background Star Colors
+
+    /// Cool blue-white for background stars
+    static let bgStarCoolBlue = Color(hex: "#AAD4FF")
+
+    /// Warm peach for background stars
+    static let bgStarWarmPeach = Color(hex: "#FFE4B5")
+
+    /// Calculate background star color based on temperature
+    /// - Parameter temperature: 0.0 = cool blue, 0.5 = white, 1.0 = warm peach
+    static func backgroundStarColor(temperature: Double) -> Color {
+        let clampedTemp = max(0, min(1, temperature))
+
+        if clampedTemp < 0.5 {
+            // Interpolate between cool blue and white
+            let t = clampedTemp * 2
+            return interpolate(from: bgStarCoolBlue, to: .white, t: t)
+        } else {
+            // Interpolate between white and warm peach
+            let t = (clampedTemp - 0.5) * 2
+            return interpolate(from: .white, to: bgStarWarmPeach, t: t)
+        }
+    }
+
+    // MARK: - Nebula Colors
+
+    /// Deep blue for nebula clouds
+    static let nebulaBlue = Color(hex: "#1E3A5F")
+
+    /// Deep purple for nebula clouds
+    static let nebulaPurple = Color(hex: "#2D1B4E")
+
+    /// Deep rose for nebula clouds
+    static let nebulaRose = Color(hex: "#4A1C40")
+
+    /// Deep teal for nebula clouds
+    static let nebulaTeal = Color(hex: "#1A3A4A")
+
+    /// Deep indigo for nebula clouds
+    static let nebulaIndigo = Color(hex: "#252050")
+
     // MARK: - UI Colors
 
     /// Primary button blue
