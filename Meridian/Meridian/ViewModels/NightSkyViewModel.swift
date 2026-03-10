@@ -86,30 +86,19 @@ final class NightSkyViewModel: ObservableObject {
         starDays.map { RenderableStar.from(dayStar: $0) }
     }
 
-    /// Constellation lines connecting same-week stars
+    /// Constellation lines connecting all stars globally in chronological order
     var constellationLines: [ConstellationLine] {
-        // Group stars by week
-        let byWeek = Dictionary(grouping: starDays) { $0.weekIdentifier }
+        let sorted = starDays.sorted { $0.date < $1.date }
+        guard sorted.count >= 2 else { return [] }
         var lines: [ConstellationLine] = []
-
-        for (week, starsInWeek) in byWeek {
-            // Need at least 2 stars to form a constellation
-            guard starsInWeek.count >= Theme.Constellation.minimumStarsForConstellation else {
-                continue
-            }
-
-            // Sort by date and connect sequentially
-            let sorted = starsInWeek.sorted { $0.date < $1.date }
-            for i in 0..<(sorted.count - 1) {
-                lines.append(ConstellationLine(
-                    startStarID: sorted[i].date,
-                    endStarID: sorted[i + 1].date,
-                    weekIdentifier: week,
-                    opacity: Theme.Constellation.lineOpacity
-                ))
-            }
+        for i in 0..<(sorted.count - 1) {
+            lines.append(ConstellationLine(
+                startStarID: sorted[i].date,
+                endStarID: sorted[i + 1].date,
+                weekIdentifier: sorted[i].weekIdentifier,
+                opacity: Theme.Constellation.lineOpacity
+            ))
         }
-
         return lines
     }
 

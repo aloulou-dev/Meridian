@@ -23,6 +23,11 @@ struct NightSkyCanvasView: View {
     @GestureState private var magnificationDelta: CGFloat = 1.0
     @State private var accumulatedScale: CGFloat = Theme.Zoom.defaultScale
 
+    // MARK: - Fly-Forward State
+
+    @State private var flyProgress: CGFloat = 0
+    @State private var flyFocalPoint: CGPoint = .zero
+
     // MARK: - Background Layers State
 
     @State private var nebulaClouds: [NebulaCloud] = []
@@ -96,7 +101,8 @@ struct NightSkyCanvasView: View {
                     stars: backgroundStars,
                     parallaxOffset: offset,
                     scale: effectiveScale,
-                    screenSize: geometry.size
+                    screenSize: geometry.size,
+                    flyProgress: flyProgress
                 )
 
                 // Layer 2: Constellation lines (depth: 0.7x parallax)
@@ -112,12 +118,14 @@ struct NightSkyCanvasView: View {
                     stars: renderableStars,
                     parallaxOffset: offset,
                     scale: effectiveScale,
+                    flyProgress: flyProgress,
+                    flyFocalPoint: flyFocalPoint,
                     onStarTapped: onStarTapped
                 )
             }
             .gesture(combinedGesture(for: geometry.size))
-            .onTapGesture(count: 2) {
-                handleDoubleTap()
+            .onTapGesture(count: 2, coordinateSpace: .local) { location in
+                handleFlyForward(from: location)
             }
             .onAppear {
                 initializeBackgroundLayers(for: geometry.size)
@@ -183,17 +191,17 @@ struct NightSkyCanvasView: View {
             }
     }
 
-    /// Handle double-tap to toggle zoom
-    private func handleDoubleTap() {
-        withAnimation(.easeInOut(duration: Theme.Zoom.resetAnimationDuration)) {
-            if accumulatedScale > Theme.Zoom.defaultScale + 0.1 {
-                // If zoomed in, reset to default
-                accumulatedScale = Theme.Zoom.defaultScale
-                accumulatedOffset = .zero
-            } else {
-                // If at default or zoomed out, zoom in
-                accumulatedScale = Theme.Zoom.doubleTapScale
-            }
+    /// Trigger a meditative fly-forward animation from the tapped screen location.
+    /// Stars expand outward from the focal point; close stars move fastest.
+    /// After the animation completes the state resets silently (no snap visible).
+    private func handleFlyForward(from tapLocation: CGPoint) {
+        guard flyProgress == 0 else { return }  // ignore if already animating
+        flyFocalPoint = tapLocation
+        withAnimation(.easeIn(duration: Theme.FlyForward.duration)) {
+            flyProgress = 1.0
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Theme.FlyForward.duration) {
+            flyProgress = 0  // instant reset — 0 means no transform applied
         }
     }
 }

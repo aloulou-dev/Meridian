@@ -9,18 +9,21 @@ import SwiftUI
 
 /// Renders individual stars with multi-layered glows and optional diffraction spikes
 struct StarRenderer {
-    /// Draw a star at the given position with full glow effects
+    /// Draw a star at the given position with full glow effects.
+    /// - Parameter opacityMultiplier: Additional opacity factor applied on top of the star's own
+    ///   depth-derived opacity (default 1.0). Pass a value < 1.0 for fly-forward fade effects.
     static func draw(
         star: RenderableStar,
         in context: GraphicsContext,
         at screenPosition: CGPoint,
         twinklePhase: Double,
-        scale: CGFloat = 1.0
+        scale: CGFloat = 1.0,
+        opacityMultiplier: Double = 1.0
     ) {
         let baseSize = star.effectiveSize
         let size = baseSize * scale
         let color = Color.starColor(temperature: star.colorTemperature)
-        let opacity = star.depthLayer.opacityMultiplier
+        let opacity = star.opacityMultiplier * opacityMultiplier
 
         // Scale blur radii (but cap to avoid excessive blur at high zoom)
         let blurScale = min(scale, 2.0)

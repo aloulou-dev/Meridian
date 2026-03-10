@@ -125,15 +125,28 @@ extension Date {
         Calendar.current.date(byAdding: .day, value: days, to: self) ?? self
     }
 
-    /// Deterministic star position (0.1...0.9) for one-star-per-day night sky
+    /// Deterministic star position for one-star-per-day night sky.
+    /// Returns values in 0.0–1.0 mapping to full virtual canvas (1.5× width, 3.0× height).
+    /// Uses independent XOR mixing for X and Y to avoid the diagonal correlation
+    /// produced by the old `seed * 31` approach.
     static func starPositionForDay(_ date: Date) -> (x: Double, y: Double) {
         let calendar = Calendar.current
-        let start = calendar.startOfDay(for: date)
-        let seed = Int(start.timeIntervalSince1970)
-        let seed1 = abs(seed)
-        let seed2 = abs(seed &* 31)
-        let x = 0.1 + (Double(seed1 % 1000) / 1000.0) * 0.8
-        let y = 0.1 + (Double(seed2 % 1000) / 1000.0) * 0.8
+        let seed = Int(calendar.startOfDay(for: date).timeIntervalSince1970)
+
+        // Independent XOR mixing for X
+        var hx = seed ^ 0xA1B2C3D4
+        hx ^= hx >> 16
+        hx = hx &* 0x45d9f3b
+        hx ^= hx >> 15
+
+        // Independent XOR mixing for Y — different constants break correlation
+        var hy = seed ^ 0xD4C3B2A1
+        hy ^= hy >> 15
+        hy = hy &* 0x2c1b3c6e
+        hy ^= hy >> 13
+
+        let x = Double(abs(hx) % 10000) / 10000.0
+        let y = Double(abs(hy) % 10000) / 10000.0
         return (x, y)
     }
 

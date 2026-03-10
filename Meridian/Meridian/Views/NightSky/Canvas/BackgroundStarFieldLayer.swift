@@ -13,6 +13,7 @@ struct BackgroundStarFieldLayer: View {
     let parallaxOffset: CGSize
     let scale: CGFloat
     let screenSize: CGSize
+    let flyProgress: CGFloat
 
     @State private var twinklePhases: [Int: Double] = [:]
 
@@ -20,12 +21,14 @@ struct BackgroundStarFieldLayer: View {
         stars: [BackgroundStar],
         parallaxOffset: CGSize,
         scale: CGFloat = 1.0,
-        screenSize: CGSize
+        screenSize: CGSize,
+        flyProgress: CGFloat = 0
     ) {
         self.stars = stars
         self.parallaxOffset = parallaxOffset
         self.scale = scale
         self.screenSize = screenSize
+        self.flyProgress = flyProgress
     }
 
     var body: some View {
@@ -67,8 +70,9 @@ struct BackgroundStarFieldLayer: View {
                 // Get color based on temperature
                 let color = Color.backgroundStarColor(temperature: star.colorTemperature)
 
-                // Scale the star size slightly with zoom
-                let scaledSize = star.size * min(bgScale, 1.5)
+                // Scale the star size slightly with zoom; grow during fly-forward
+                let sizeBoost = flyProgress > 0 ? (1.0 + flyProgress * Theme.FlyForward.bgStarGrowthFactor) : 1.0
+                let scaledSize = star.size * min(bgScale, 1.5) * sizeBoost
 
                 // Draw simple filled circle (no glow needed for tiny stars)
                 let rect = CGRect(

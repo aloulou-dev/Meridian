@@ -278,4 +278,68 @@ enum Theme {
         /// Double-tap zoom scale
         static let doubleTapScale: CGFloat = 2.0
     }
+
+    // MARK: - Fly Forward
+
+    enum FlyForward {
+        /// Duration of the fly-forward animation in seconds
+        static let duration: Double = 1.75
+
+        /// How far stars expand outward from the focal point
+        static let maxExpansionFactor: CGFloat = 2.5
+
+        /// Stars within this screen-point radius of the focal point fade out (they "pass" the camera)
+        static let focalFadeRadius: CGFloat = 80
+
+        /// Background decorative stars grow by this multiplier during the animation
+        static let bgStarGrowthFactor: CGFloat = 3.0
+    }
+
+    // MARK: - Scene 3D
+
+    enum Scene3D {
+        // World space volume for journal stars (centered at origin)
+        static let journalXSpread: Float = 1000   // -500 to +500
+        static let journalYSpread: Float = 800    // -400 to +400
+        static let journalZNear: Float  = -100    // closest journal star to camera
+        static let journalZFar: Float   = -1100   // furthest journal star from camera
+
+        // Background star sphere radius (surrounds the entire journal star volume)
+        static let bgStarRadius: Float = 1400
+
+        // Camera
+        static let cameraStartZ: Float  = 600
+        static let cameraFOV: Double    = 60       // degrees
+        static let driftSpeed: Float    = 6.0      // world units per second
+        static let driftResetThreshold: Float = -500  // Z position that triggers soft-reset
+
+        // Journal star geometry (world units)
+        static let journalStarMinRadius: Float = 1.5
+        static let journalStarMaxRadius: Float = 4.0
+
+        // Background star geometry
+        static let bgStarMinRadius: Float = 0.3
+        static let bgStarMaxRadius: Float = 1.2
+
+        // Glow layers per journal star (2 layers: outer haze + inner bloom)
+        static let glowRadiusMultipliers: [Float] = [8.0, 3.0]
+        static let glowOpacities: [Float]          = [0.10, 0.40]
+
+        // Point light per journal star
+        static let starLightIntensity: CGFloat = 800
+
+        // Constellation lines
+        static let lineRadius: Float = 0.15       // SCNCylinder radius
+        static let lineOpacity: Float = 0.12
+
+        // Navigation feel
+        static let orbitSensitivity: Float = 0.003      // radians per screen point
+        static let pitchClamp: Float = 1.1              // max radians up/down (~63°)
+        static let dollyUnitsPerPinchUnit: Float = 300
+        static let interactionResumeDelay: Double = 3.0 // seconds before drift resumes
+
+        // Zoom bounds — cumulative dolly relative to spawn position
+        static let dollyMin: Float = -200   // can pull back 200 units (zoom out)
+        static let dollyMax: Float =  300   // can push forward 300 units (zoom in)
+    }
 }
