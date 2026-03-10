@@ -4,21 +4,18 @@ Meridian is a native iOS app that combines habit-building with reflective journa
 
 ## How It Works
 
-Meridian structures each day around two journaling sessions and a physical QR code "totem" that anchors the ritual in something tangible.
-
 ### Morning Flow
 
 1. At a user-configured wake-up time, selected apps are blocked and a notification is sent.
 2. The user opens Meridian and is presented with an AI-generated examen-inspired prompt focused on gratitude, intention, and readiness for the day.
 3. They choose to write digitally or photograph a handwritten entry (OCR via GPT-4o extracts the text).
-4. After submitting, the entry becomes a star in a night-sky visualization.
-5. A QR code scan screen appears -- the user scans their physical totem to unlock apps, or taps "Not near totem" to bypass.
+4. After submitting, the entry becomes a star in the night-sky visualization and apps are unlocked.
 
 ### Night Flow
 
 1. At a user-set wind-down time, distracting apps enter a "Soft Lock."
 2. The user opens Meridian and answers an AI-generated reflective prompt following the classic examen arc (presence, gratitude, replay, consolation/desolation, forgiveness, resolution).
-3. After submitting, the QR totem scan (or bypass) grants a 15-minute Grace Period.
+3. After submitting, the entry grants a 15-minute Grace Period.
 4. When the grace period expires, apps enter "Hard Lock" (Sanctuary Mode) for the night.
 
 ### Anytime Journaling
@@ -48,14 +45,14 @@ Meridian/
 │   ├── AIQuestionService   # OpenAI chat completions + vision OCR
 │   ├── QuestionGenerationService  # AI vs fallback orchestrator
 │   ├── PromptCoachService  # Deterministic fallback prompts
-│   ├── QRScannerService    # AVCaptureSession QR code scanning
 │   └── AppSecrets          # Dev-only API key loading
 ├── ViewModels/             # ObservableObject VMs per screen
 ├── Views/
 │   ├── Journal/            # Entry screen + camera capture
-│   ├── NightSky/           # Home screen (star visualization)
+│   ├── NightSky/
+│   │   ├── Scene/          # SceneKit 3D: NightSkySceneView, NightSkySceneBuilder, CelestialSpriteGenerator
+│   │   └── Canvas/         # Legacy 2D renderer (not active)
 │   ├── Onboarding/         # 6-step setup wizard
-│   ├── Totem/              # QR setup + post-journal scan
 │   ├── Settings/           # App configuration
 │   ├── Search/             # Entry search
 │   └── Components/         # Reusable UI (CyclePhaseIndicator)
@@ -73,6 +70,17 @@ unlocked <--> morningLocked (journal entry unlocks)
 ```
 
 A cycle phase indicator pill is shown on every screen so the user always knows where they are in the daily rhythm.
+
+### Night Sky Visualization
+
+The home screen renders journal entries as a 3D star field using SceneKit:
+
+- Each day's entries become a single glowing star; star size and color temperature reflect the session type and content
+- A background star sphere (150 procedural stars) surrounds the scene
+- Two procedural galaxy sprites (a 2-arm logarithmic spiral and an edge-on disk) float as faint distant objects on billboard planes
+- Constellation lines connect stars written in the same calendar week
+- The camera auto-drifts forward; pan gesture orbits, pinch gesture dollies (clamped to prevent pixelation)
+- A compass tape overlay shows the current camera heading
 
 ## Requirements
 
@@ -119,7 +127,8 @@ Debug builds automatically seed ~30 sample journal entries across 20 unique days
 - **SwiftUI** -- All UI
 - **FamilyControls / ManagedSettings** -- App blocking via Screen Time
 - **DeviceActivity** -- Background scheduled shield application (works even when app is closed)
-- **AVFoundation** -- QR code scanning via camera
+- **SceneKit** -- 3D night-sky scene with emissive star geometry, procedural galaxy billboard sprites, pan/pinch camera control, and atmospheric auto-drift
+- **AVFoundation** -- Camera capture for photographing handwritten journal entries
 - **OpenAI API** -- AI-generated examen prompts (GPT-4.1-mini) and handwriting OCR (GPT-4o vision)
 - **Core Data** -- Journal entry persistence
 - **BackgroundTasks** -- BGAppRefreshTask for lock scheduling
